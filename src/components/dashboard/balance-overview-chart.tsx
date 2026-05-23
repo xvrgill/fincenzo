@@ -40,33 +40,35 @@ export function BalanceOverviewChart({ data }: { data: DailyActivityPoint[] }) {
     <div className="w-full" style={{ height: 288 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
-          <CartesianGrid stroke="var(--border)" vertical={false} />
+          <CartesianGrid stroke="var(--border)" vertical={false} strokeDasharray="2 4" />
           <XAxis
             dataKey="date"
             tickFormatter={(d: string) => {
               const date = new Date(d);
               return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
             }}
-            stroke="var(--muted-foreground)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--border)"
+            tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)", fill: "var(--muted-foreground)" }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
             tickFormatter={(v: number) => usdCompact.format(v)}
-            stroke="var(--muted-foreground)"
-            tick={{ fontSize: 11 }}
+            stroke="var(--border)"
+            tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)", fill: "var(--muted-foreground)" }}
             tickLine={false}
             axisLine={false}
             width={56}
           />
           <Tooltip
-            cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+            cursor={{ fill: "var(--muted)", opacity: 0.3 }}
             contentStyle={{
               background: "var(--popover)",
               border: "1px solid var(--border)",
-              borderRadius: 8,
-              fontSize: 12,
+              borderRadius: 2,
+              fontSize: 11,
+              fontFamily: "var(--font-geist-mono)",
+              color: "var(--foreground)",
             }}
             formatter={(value, name) => [usdFull.format(Number(value) || 0), String(name)]}
             labelFormatter={(label) =>
@@ -77,8 +79,8 @@ export function BalanceOverviewChart({ data }: { data: DailyActivityPoint[] }) {
               })
             }
           />
-          <Bar dataKey="income" name="Income" fill="oklch(0.72 0.17 145)" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="expenses" name="Expenses" fill="oklch(0.78 0.14 70)" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="income" name="Income" fill="oklch(0.68 0.18 145)" radius={[1, 1, 0, 0]} />
+          <Bar dataKey="expenses" name="Expenses" fill="oklch(0.78 0.14 70)" radius={[1, 1, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

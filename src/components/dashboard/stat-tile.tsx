@@ -16,7 +16,9 @@ export function StatTile({ label, amountCents, pctChange, invertSentiment }: Pro
     <Card>
       <CardHeader>
         <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-3xl tabular-nums">{formatMoneyCents(amountCents)}</CardTitle>
+        <CardTitle className="text-2xl tabular-nums font-medium text-foreground">
+          {formatMoneyCents(amountCents)}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ChangeIndicator pctChange={pctChange} invertSentiment={invertSentiment} />
@@ -33,23 +35,22 @@ function ChangeIndicator({
   invertSentiment?: boolean;
 }) {
   if (pctChange === null) {
-    return <p className="text-xs text-muted-foreground">No prior-month data</p>;
+    return <p className="text-xs text-muted-foreground">— no prior data</p>;
   }
-  // Round to one decimal before comparing so 0.04% doesn't render an arrow.
   const rounded = Math.round(pctChange * 10) / 10;
   if (rounded === 0) {
-    return <p className="text-xs text-muted-foreground">No change from last month</p>;
+    return <p className="text-xs text-muted-foreground">— no change</p>;
   }
   const positive = invertSentiment ? rounded < 0 : rounded > 0;
   return (
     <p
       className={cn(
-        "flex items-center gap-1 text-xs",
-        positive ? "text-emerald-600" : "text-amber-600",
+        "flex items-center gap-1 text-xs tabular-nums",
+        positive ? "text-primary" : "text-red-500",
       )}
     >
       {rounded > 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-      {Math.abs(rounded).toFixed(1)}% from last month
+      {Math.abs(rounded).toFixed(1)}% vs last month
     </p>
   );
 }

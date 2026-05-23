@@ -14,26 +14,30 @@ type Row = {
 
 export function RecentTransactions({ rows }: { rows: Row[] }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-muted-foreground">No transactions yet.</p>;
+    return <p className="text-xs text-muted-foreground">— no transactions yet</p>;
   }
 
   return (
     <div className="flex flex-col">
+      <div className="mb-2 grid grid-cols-[1fr_auto] border-b border-border pb-1.5 text-xs tracking-widest uppercase text-muted-foreground">
+        <span>Merchant</span>
+        <span>Amount</span>
+      </div>
       {rows.map((t) => {
         const outgoing = t.amountCents > 0;
         return (
           <div
             key={t.id}
-            className="flex items-center justify-between gap-3 border-b py-2.5 last:border-b-0 last:pb-0 first:pt-0"
+            className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-border/60 py-2 last:border-b-0"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{t.merchantName ?? t.name}</p>
+              <p className="truncate text-sm">{t.merchantName ?? t.name}</p>
               <p className="text-xs text-muted-foreground">{formatDate(t.date)}</p>
             </div>
             <div
               className={cn(
-                "text-sm font-medium tabular-nums shrink-0",
-                outgoing ? "text-foreground" : "text-emerald-600",
+                "text-sm tabular-nums shrink-0",
+                outgoing ? "text-foreground" : "text-primary",
               )}
             >
               {outgoing ? "-" : "+"}
@@ -44,9 +48,9 @@ export function RecentTransactions({ rows }: { rows: Row[] }) {
       })}
       <Link
         href="/transactions"
-        className="mt-3 text-center text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        className="mt-3 text-center text-xs tracking-wide text-muted-foreground underline underline-offset-4 hover:text-primary transition-colors"
       >
-        View all transactions
+        view all transactions
       </Link>
     </div>
   );

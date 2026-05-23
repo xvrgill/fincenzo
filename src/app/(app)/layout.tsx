@@ -25,10 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen flex-1 flex-col md:flex-row">
       <AppSidebar userEmail={user.email ?? ""} />
-      <main className="flex-1 overflow-x-hidden bg-muted/30">
+      <main className="flex-1 overflow-x-hidden bg-background">
         <InviteBanner invites={invites} />
         {household.inHousehold ? (
-          <div className="border-b bg-card/60">
+          <div className="border-b border-border bg-card/40">
             <div className="mx-auto flex max-w-7xl items-center justify-end px-4 py-2 md:px-6">
               <ScopeSwitcher
                 current={scope.kind === "household" ? "household" : "user"}

@@ -19,13 +19,13 @@ export function NetWorthCard({ currentCents, series }: Props) {
 
   return (
     <Link href="/net-worth" className="group">
-      <Card className="transition-colors group-hover:bg-muted/30">
+      <Card className="transition-colors group-hover:bg-muted/20 cursor-pointer">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardDescription>Net worth</CardDescription>
-            <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            <CardDescription>Net Worth</CardDescription>
+            <ArrowRight className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
           </div>
-          <CardTitle className="text-3xl tabular-nums">
+          <CardTitle className="text-3xl tabular-nums font-medium">
             {formatMoneyCents(currentCents)}
           </CardTitle>
         </CardHeader>
@@ -34,13 +34,11 @@ export function NetWorthCard({ currentCents, series }: Props) {
             {series.length >= 2 ? (
               <NetWorthSparkline data={series} />
             ) : (
-              <p className="text-xs text-muted-foreground">
-                Snapshots will appear as you sync.
-              </p>
+              <p className="text-xs text-muted-foreground">— awaiting sync data</p>
             )}
           </div>
           {series.length >= 2 ? (
-            <div className={cn("shrink-0 text-xs tabular-nums", positive ? "text-emerald-600" : "text-red-600")}>
+            <div className={cn("shrink-0 text-xs tabular-nums tracking-wide", positive ? "text-primary" : "text-red-500")}>
               {positive ? "+" : ""}
               {formatMoneyCents(change)}
             </div>

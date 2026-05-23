@@ -38,13 +38,14 @@ export default async function DashboardPage() {
     getNetWorthSeries(scope),
   ]);
 
-  const monthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase();
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">{monthLabel}</p>
+      <div className="border-b border-border pb-4">
+        <p className="text-xs tracking-widest text-primary mb-1">▸ OVERVIEW</p>
+        <h1 className="text-xl font-medium tracking-wide text-foreground">Dashboard</h1>
+        <p className="text-xs tracking-widest text-muted-foreground mt-0.5">{monthLabel}</p>
       </div>
 
       <NetWorthCard currentCents={netWorth.netCents} series={netWorthSeries} />
@@ -70,8 +71,8 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Activity</CardTitle>
-          <CardDescription>Income vs. expenses, {monthLabel}</CardDescription>
+          <CardDescription>Activity</CardDescription>
+          <CardTitle>Income vs. Expenses — {monthLabel}</CardTitle>
         </CardHeader>
         <CardContent>
           <BalanceOverviewChart data={daily} />
@@ -81,8 +82,8 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Spending by category</CardTitle>
-            <CardDescription>This month</CardDescription>
+            <CardDescription>Spending</CardDescription>
+            <CardTitle>By Category — This Month</CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryBreakdown rows={breakdown} />
@@ -91,8 +92,8 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent transactions</CardTitle>
-            <CardDescription>Latest activity across all accounts</CardDescription>
+            <CardDescription>Transactions</CardDescription>
+            <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <RecentTransactions rows={recent} />
