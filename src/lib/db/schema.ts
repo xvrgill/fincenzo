@@ -171,6 +171,43 @@ export const activityLog = pgTable(
   (t) => [index("activity_log_household_created_idx").on(t.householdId, t.createdAt)],
 );
 
+// Detected recurring charges (subscriptions, gym memberships, etc.). Rows are
+// created by the detector and start in `suggested`; the user confirms or
+// dismisses. Cadence is derived from the spacing of past matching transactions.
+export const recurringTransactions = pgTable(
+  "recurring_transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    scopeType: text("scope_type", { enum: ["user", "household"] }).notNull(),
+    scopeId: uuid("scope_id").notNull(),
+    merchantKey: text("merchant_key").notNull(),
+    merchantName: text("merchant_name").notNull(),
+    category: text("category"),
+    averageAmountCents: bigint("average_amount_cents", { mode: "number" }).notNull(),
+    isoCurrencyCode: text("iso_currency_code").default("USD"),
+    cadence: text("cadence", {
+      enum: ["weekly", "biweekly", "monthly", "yearly"],
+    }).notNull(),
+    firstSeenDate: date("first_seen_date").notNull(),
+    lastSeenDate: date("last_seen_date").notNull(),
+    nextExpectedDate: date("next_expected_date").notNull(),
+    sampleCount: integer("sample_count").notNull(),
+    status: text("status", { enum: ["suggested", "confirmed", "dismissed"] })
+      .notNull()
+      .default("suggested"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("recurring_scope_merchant_cadence_idx").on(
+      t.scopeType,
+      t.scopeId,
+      t.merchantKey,
+      t.cadence,
+    ),
+  ],
+);
+
 export const goals = pgTable("goals", {
   id: uuid("id").primaryKey().defaultRandom(),
   scopeType: text("scope_type", { enum: ["user", "household"] }).notNull(),

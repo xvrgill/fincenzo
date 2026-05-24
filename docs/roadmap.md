@@ -1,0 +1,33 @@
+# Roadmap
+
+Built in phases — solo experience first, household features layered on once the core is solid.
+
+## Phase 1 — Solo user ✅
+
+1. ✅ Project skeleton: Next.js + Tailwind + shadcn, Supabase project, Drizzle schema, auth.
+2. ✅ Plaid Link integration in sandbox; `access_token` stored per institution per user, encrypted at rest (AES-256-GCM via `src/lib/crypto.ts`).
+3. ✅ Transaction + account sync — initial pull on link, webhook-driven incremental sync (`/api/plaid/webhook`), plus manual `/api/plaid/sync`.
+4. ✅ Categorization: Plaid's category, user override, persisted rules (merchant-equals + name-contains substring).
+5. ✅ Dashboard: net worth, income/expense tiles, recent transactions, category breakdown.
+6. ✅ Budgets: monthly category budgets with progress bars; month navigator.
+7. ✅ Net worth: assets - liabilities, charted over time. Daily snapshot job runs via Vercel Cron (`vercel.json` → `/api/cron/snapshot`).
+8. ✅ Goals (savings targets with progress) — create/edit/delete.
+
+## Phase 2 — Households ✅
+
+1. ✅ Household entity; invite-by-email flow with pending-invite state.
+2. ✅ Per-account sharing toggle: private by default; owner promotes to `household`.
+3. ✅ Per-category sharing for budgets — household-scope add form has a Shared/Personal selector.
+4. ✅ Household dashboard view: scope switcher toggles between personal and household, recomputing every panel.
+5. ✅ Permissions: partner sees only shared data; only the owner can unlink or re-share.
+6. ✅ Activity log on the Household page.
+
+## Phase 3 — Polish (in progress)
+
+- Vitest + Playwright test scaffolding ✅
+- Recurring transaction detection / subscription tracker ✅
+- Cash-flow forecasting ✅
+- **Next: Export (CSV transactions; year-end summary PDF stretch goal)**
+- PWA / mobile-friendly layout pass (mobile drawer nav landed; deeper responsive pass pending)
+- Plaid production approval + JWT-verified webhooks (`src/lib/plaid/webhook-verify.ts` already in place)
+- Error monitoring (Sentry or similar)

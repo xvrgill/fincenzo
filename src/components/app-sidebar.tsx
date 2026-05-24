@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   PiggyBank,
+  RotateCw,
   Scale,
   Target,
   TrendingUp,
@@ -29,6 +30,7 @@ const nav = [
   { href: "/investments", label: "Investments", icon: TrendingUp },
   { href: "/net-worth", label: "Net Worth", icon: Scale },
   { href: "/goals", label: "Goals", icon: Target },
+  { href: "/subscriptions", label: "Subscriptions", icon: RotateCw },
   { href: "/household", label: "Household", icon: Users },
 ] as const;
 
