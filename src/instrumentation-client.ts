@@ -7,10 +7,18 @@ if (dsn) {
     dsn,
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? "development",
     tracesSampleRate: 0.1,
-    // Session Replay records DOM + inputs. This app shows account balances,
-    // so keep it off until we have a scrubbing story.
+    // Replay only captures sessions that hit an error, never random sessions.
+    // The default replayIntegration masks all text + inputs and blocks media,
+    // so account numbers and balances never leave the browser.
     replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
+    integrations: [
+      Sentry.replayIntegration({
+        maskAllText: true,
+        maskAllInputs: true,
+        blockAllMedia: true,
+      }),
+    ],
     sendDefaultPii: false,
   });
 }

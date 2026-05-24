@@ -30,4 +30,4 @@ Built in phases — solo experience first, household features layered on once th
 - CSV transaction export ✅ (year-end summary PDF still a stretch goal)
 - PWA / mobile-friendly layout pass ✅ (mobile drawer nav, responsive sweep of dense pages, web app manifest + generated `icon` / `apple-icon` routes, `themeColor` + `viewportFit=cover`, safe-area-inset on the sticky header)
 - Plaid production approval + JWT-verified webhooks (`src/lib/plaid/webhook-verify.ts` already in place)
-- Error monitoring ✅ (Sentry: server + client + edge init via `instrumentation.ts`, `onRequestError` hook, explicit captures in `/api/plaid/webhook` and `/api/cron/snapshot`; source-map upload + replays pending)
+- Error monitoring ✅ (Sentry: server + client + edge init via `instrumentation.ts`, `onRequestError` hook, explicit captures in `/api/plaid/webhook` and `/api/cron/snapshot`, build-time source-map upload via `withSentryConfig` in `next.config.ts`, error-only Session Replay with `maskAllText`/`maskAllInputs`/`blockAllMedia`)
