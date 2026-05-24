@@ -53,8 +53,8 @@ export const householdInvites = pgTable("household_invites", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
 
-// One row per linked institution. access_token is sensitive — encrypt at the
-// application layer (or via pgcrypto) before storing in production.
+// One row per linked institution. access_token is encrypted at rest by
+// src/lib/crypto.ts — read via decryptToken, write via encryptToken.
 export const plaidItems = pgTable("plaid_items", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

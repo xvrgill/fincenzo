@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { plaidItems } from "@/lib/db/schema";
 import { syncItem } from "@/lib/plaid/sync";
 import { snapshotNetWorth } from "@/lib/queries/net-worth";
+import { encryptToken } from "@/lib/crypto";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     .values({
       userId: user.id,
       plaidItemId: exchange.data.item_id,
-      accessToken: exchange.data.access_token,
+      accessToken: encryptToken(exchange.data.access_token),
       institutionId: body.institution?.institution_id,
       institutionName: body.institution?.name,
     })

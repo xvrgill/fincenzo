@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { accounts, plaidItems, transactions } from "@/lib/db/schema";
 import { loadUserRules, matchRule } from "@/lib/rules";
+import { decryptToken } from "@/lib/crypto";
 import { plaid } from "./client";
 
 type PlaidAccountType = "depository" | "credit" | "loan" | "investment" | "brokerage" | "other";
@@ -25,7 +26,7 @@ export async function syncAccounts(itemId: string) {
   const item = await db.query.plaidItems.findFirst({ where: eq(plaidItems.id, itemId) });
   if (!item) throw new Error(`plaid_item ${itemId} not found`);
 
-  const { data } = await plaid.accountsGet({ access_token: item.accessToken });
+  const { data } = await plaid.accountsGet({ access_token: decryptToken(item.accessToken) });
 
   for (const acct of data.accounts) {
     const mappedType = accountTypeMap[acct.type as PlaidAccountType] ?? "other";
@@ -84,6 +85,7 @@ export async function syncTransactions(itemId: string) {
   const ruleCategoryFor = (merchantName: string | null | undefined, name: string) =>
     matchRule(rules, merchantName, name);
 
+  const accessToken = decryptToken(item.accessToken);
   let cursor = item.syncCursor ?? undefined;
   let hasMore = true;
   let totalAdded = 0;
@@ -92,7 +94,7 @@ export async function syncTransactions(itemId: string) {
 
   while (hasMore) {
     const { data } = await plaid.transactionsSync({
-      access_token: item.accessToken,
+      access_token: accessToken,
       cursor,
     });
 
