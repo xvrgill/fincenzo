@@ -53,29 +53,32 @@ Things deliberately deferred: mobile app (PWA may be enough early), ML categoriz
 
 ## Phased roadmap
 
-### Phase 1 — Solo user (current focus)
-1. Project skeleton: Next.js + Tailwind + shadcn, Supabase project, Drizzle schema, auth.
-2. Plaid Link integration in sandbox; store `access_token` per institution per user.
-3. Transaction + account sync (initial pull + webhook-driven incremental sync).
-4. Categorization: use Plaid's category, allow user override, persist rules ("Trader Joe's -> Groceries always").
-5. Dashboard: balance overview chart, total income/expense/saved tiles, recent transactions, cost analysis by category.
-6. Budgets: monthly category budgets with progress bars.
-7. Net worth: assets - liabilities snapshot, charted over time (daily snapshot job).
-8. Goals (savings targets with progress) — the "Goal tracker" card in the reference.
+### Phase 1 — Solo user ✅
+1. ✅ Project skeleton: Next.js + Tailwind + shadcn, Supabase project, Drizzle schema, auth.
+2. ✅ Plaid Link integration in sandbox; `access_token` stored per institution per user, encrypted at rest (AES-256-GCM via `src/lib/crypto.ts`).
+3. ✅ Transaction + account sync — initial pull on link, webhook-driven incremental sync (`/api/plaid/webhook`), plus manual `/api/plaid/sync`.
+4. ✅ Categorization: Plaid's category, user override, persisted rules (merchant-equals + name-contains substring).
+5. ✅ Dashboard: net worth, income/expense tiles, recent transactions, category breakdown.
+6. ✅ Budgets: monthly category budgets with progress bars; month navigator.
+7. ✅ Net worth: assets - liabilities, charted over time. Daily snapshot job runs via Vercel Cron (`vercel.json` → `/api/cron/snapshot`).
+8. ✅ Goals (savings targets with progress) — create/edit/delete.
 
-### Phase 2 — Households
-1. Household entity; invite-by-email flow with a pending-invite state.
-2. Per-account sharing toggle: each linked account is `private` by default; user can promote to `shared`.
-3. Per-category sharing for budgets (some couples share groceries but not personal spending).
-4. Household dashboard view: union of shared accounts, joint budgets, combined net worth.
-5. Permissions: either partner can view shared data; only the account owner can unlink or re-share.
-6. Activity log so each partner can see what the other changed.
+### Phase 2 — Households ✅
+1. ✅ Household entity; invite-by-email flow with pending-invite state.
+2. ✅ Per-account sharing toggle: private by default; owner promotes to `household`.
+3. ✅ Per-category sharing for budgets — household-scope add form has a Shared/Personal selector.
+4. ✅ Household dashboard view: scope switcher toggles between personal and household, recomputing every panel.
+5. ✅ Permissions: partner sees only shared data; only the owner can unlink or re-share.
+6. ✅ Activity log on the Household page.
 
-### Phase 3 — Polish (post-MVP)
+### Phase 3 — Polish (post-MVP, not started)
 - Recurring transaction detection, subscription tracker.
 - Cash-flow forecasting.
 - Export (CSV, maybe a year-end summary PDF).
-- PWA / mobile-friendly layout pass.
+- PWA / mobile-friendly layout pass (mobile drawer nav landed; deeper responsive pass pending).
+- Plaid production approval + JWT-verified webhooks already in place (`src/lib/plaid/webhook-verify.ts`).
+- Error monitoring (Sentry or similar).
+- Vitest + Playwright test suites (originally planned in Phase 1's tech stack table; deferred).
 
 ## Data model sketch
 
@@ -143,8 +146,8 @@ Requires Node 20+ and a free Supabase project. Plaid keys are only needed once w
 
    ```sh
    cp .env.example .env.local
-   # then fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
-   # SUPABASE_SERVICE_ROLE_KEY, and DATABASE_URL
+   # then fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+   # SUPABASE_SECRET_KEY, DATABASE_URL, and PLAID_TOKEN_ENCRYPTION_KEY
    ```
 
 4. **Run migrations**
@@ -184,4 +187,4 @@ Requires Node 20+ and a free Supabase project. Plaid keys are only needed once w
 
 ### Environment variables
 
-See `.env.example` for the full list. Production additionally needs a real Plaid environment (`PLAID_ENV=production`) and a sufficiently random secret for encrypting Plaid access tokens at rest (the schema currently stores them in plaintext — fine for solo dev, must change before anyone else uses the app).
+See `.env.example` for the full list. Plaid access tokens are encrypted at rest with `PLAID_TOKEN_ENCRYPTION_KEY` (AES-256-GCM); the same key must be set in every environment that talks to the DB. Production additionally needs a real Plaid environment (`PLAID_ENV=production`, prod secret) and `CRON_SECRET` for the daily net-worth snapshot job.
