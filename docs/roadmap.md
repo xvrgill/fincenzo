@@ -27,7 +27,7 @@ Built in phases — solo experience first, household features layered on once th
 - Vitest + Playwright test scaffolding ✅
 - Recurring transaction detection / subscription tracker ✅
 - Cash-flow forecasting ✅
-- **Next: Export (CSV transactions; year-end summary PDF stretch goal)**
+- CSV transaction export ✅ (year-end summary PDF still a stretch goal)
 - PWA / mobile-friendly layout pass (mobile drawer nav landed; deeper responsive pass pending)
 - Plaid production approval + JWT-verified webhooks (`src/lib/plaid/webhook-verify.ts` already in place)
 - Error monitoring (Sentry or similar)

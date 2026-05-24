@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { Settings2 } from "lucide-react";
+import { Download, Settings2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
 import { accounts, transactions } from "@/lib/db/schema";
@@ -59,13 +59,23 @@ export default async function TransactionsPage() {
               : `Latest ${rows.length} transactions across all accounts. Click a category to change it.`}
           </p>
         </div>
-        <Link
-          href="/transactions/rules"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <Settings2 className="size-3.5" />
-          Manage rules
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <a
+            href="/api/transactions/export"
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Download className="size-3.5" />
+            Export CSV
+          </a>
+          <Link
+            href="/transactions/rules"
+            className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Settings2 className="size-3.5" />
+            Manage rules
+          </Link>
+        </div>
       </div>
 
       {rows.length > 0 ? (
