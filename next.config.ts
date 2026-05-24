@@ -15,5 +15,9 @@ export default withSentryConfig(nextConfig, {
     // Don't ship .map files to the browser; upload-only.
     deleteSourcemapsAfterUpload: true,
   },
-  disableLogger: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });
