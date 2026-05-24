@@ -12,6 +12,7 @@ import { formatMoneyCents } from "@/lib/format";
 import { getHouseholdState } from "@/lib/queries/household";
 
 export default async function AccountsPage() {
+  throw new Error("sentry preview test")
   const supabase = await createClient();
   const {
     data: { user },
