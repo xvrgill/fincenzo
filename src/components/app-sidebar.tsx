@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   PiggyBank,
+  RotateCw,
   Scale,
   Target,
   TrendingUp,
@@ -29,6 +30,7 @@ const nav = [
   { href: "/investments", label: "Investments", icon: TrendingUp },
   { href: "/net-worth", label: "Net Worth", icon: Scale },
   { href: "/goals", label: "Goals", icon: Target },
+  { href: "/subscriptions", label: "Subscriptions", icon: RotateCw },
   { href: "/household", label: "Household", icon: Users },
 ] as const;
 
@@ -126,7 +128,7 @@ export function AppSidebar({ userEmail }: { userEmail: string }) {
 
       {/* Mobile top bar — only renders markup in DOM at <md */}
       <div className="md:hidden">
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-sidebar px-4">
+        <header className="sticky top-0 z-30 flex min-h-12 items-center justify-between border-b border-border bg-sidebar px-4 pt-[env(safe-area-inset-top)]">
           <Logo />
           <button
             type="button"

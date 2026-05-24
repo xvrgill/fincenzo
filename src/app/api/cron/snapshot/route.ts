@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { snapshotNetWorth } from "@/lib/queries/net-worth";
@@ -26,6 +27,10 @@ export async function GET(request: Request) {
     } catch (err) {
       failed += 1;
       console.error(`snapshot failed for user ${u.id}:`, err);
+      Sentry.captureException(err, {
+        tags: { area: "cron-snapshot" },
+        extra: { userId: u.id },
+      });
     }
   }
   return NextResponse.json({ total: rows.length, succeeded, failed });

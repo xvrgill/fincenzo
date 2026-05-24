@@ -118,7 +118,7 @@ export default async function RulesPage() {
         <Card>
           <CardContent className="p-0">
             <div className="divide-y">
-              <div className="grid grid-cols-[1fr_1fr_auto_auto] items-center gap-4 px-4 py-2 text-xs uppercase text-muted-foreground">
+              <div className="hidden grid-cols-[1fr_1fr_auto_auto] items-center gap-4 px-4 py-2 text-xs uppercase text-muted-foreground sm:grid">
                 <span>Match</span>
                 <span>Category</span>
                 <span className="text-right">Matches</span>
@@ -127,7 +127,7 @@ export default async function RulesPage() {
               {rows.map((r) => (
                 <div
                   key={r.id}
-                  className="grid grid-cols-[1fr_1fr_auto_auto] items-center gap-4 px-4 py-3"
+                  className="flex flex-col gap-2 px-4 py-3 sm:grid sm:grid-cols-[1fr_1fr_auto_auto] sm:items-center sm:gap-4"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
@@ -140,16 +140,19 @@ export default async function RulesPage() {
                       Created {formatDate(r.createdAt)}
                     </p>
                   </div>
-                  <div className="text-sm">{prettifyCategory(r.category)}</div>
-                  <div className="text-right text-sm tabular-nums text-muted-foreground">
-                    {r.matchCount}
+                  <div className="flex items-center justify-between gap-3 sm:contents">
+                    <div className="text-sm">{prettifyCategory(r.category)}</div>
+                    <div className="text-sm tabular-nums text-muted-foreground sm:text-right">
+                      <span className="sm:hidden">{r.matchCount} matches</span>
+                      <span className="hidden sm:inline">{r.matchCount}</span>
+                    </div>
+                    <form action={deleteCategoryRule}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <Button type="submit" variant="ghost" size="icon" aria-label="Delete rule">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </form>
                   </div>
-                  <form action={deleteCategoryRule}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <Button type="submit" variant="ghost" size="icon" aria-label="Delete rule">
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </form>
                 </div>
               ))}
             </div>

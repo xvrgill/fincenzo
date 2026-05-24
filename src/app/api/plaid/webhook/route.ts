@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { plaidItems } from "@/lib/db/schema";
@@ -55,7 +56,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: "unknown item" });
   }
 
-  await syncItem(item.id);
-  await snapshotNetWorth(item.userId);
+  try {
+    await syncItem(item.id);
+    await snapshotNetWorth(item.userId);
+  } catch (err) {
+    Sentry.captureException(err, {
+      tags: { area: "plaid-webhook", webhook_code: webhook_code ?? "unknown" },
+      extra: { itemId: item.id },
+    });
+    throw err;
+  }
   return NextResponse.json({ ok: true, synced: item.id });
 }

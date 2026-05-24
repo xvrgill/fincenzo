@@ -63,15 +63,17 @@ function BudgetList({
                       </span>
                     ) : null}
                   </p>
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {formatMoneyCents(b.spentCents)} of {formatMoneyCents(b.limitCents)}
-                    {" • "}
+                  <div className="flex flex-col gap-0.5 text-xs text-muted-foreground tabular-nums sm:flex-row sm:items-center sm:gap-1.5">
+                    <span>
+                      {formatMoneyCents(b.spentCents)} of {formatMoneyCents(b.limitCents)}
+                    </span>
+                    <span className="hidden sm:inline">•</span>
                     <span className={text}>
                       {over
                         ? `${formatMoneyCents(-remaining)} over`
                         : `${formatMoneyCents(remaining)} left`}
                     </span>
-                  </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <EditBudgetForm

@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/playwright/.cache
 
 # next.js
 /.next/
@@ -23,6 +26,8 @@
 # misc
 .DS_Store
 *.pem
+.agents/
+skills-lock.json
 
 # debug
 npm-debug.log*
