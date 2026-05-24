@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -30,11 +31,16 @@ type ChartPoint = {
 };
 
 export function BalanceOverviewChart({ data }: { data: DailyActivityPoint[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const chartData: ChartPoint[] = data.map((p) => ({
     date: p.date,
     income: p.incomeCents / 100,
     expenses: p.expensesCents / 100,
   }));
+
+  if (!mounted) return <div style={{ height: 288 }} />;
 
   return (
     <div className="w-full" style={{ height: 288 }}>

@@ -51,11 +51,16 @@ function NavList({
             className={cn(
               "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors cursor-pointer",
               active
-                ? "border-primary text-foreground bg-muted/60"
-                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40",
+                ? "border-primary bg-muted/80 text-foreground"
+                : "border-transparent text-muted-foreground hover:border-border hover:bg-muted/50 hover:text-foreground",
             )}
           >
-            <Icon className={cn("size-3.5 shrink-0", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+            <Icon
+              className={cn(
+                "size-4 shrink-0 transition-colors",
+                active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+              )}
+            />
             {label}
           </Link>
         );
@@ -69,12 +74,20 @@ function SignOut() {
     <form action={signOut}>
       <button
         type="submit"
-        className="flex w-full items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground hover:bg-muted/40 cursor-pointer"
+        className="flex w-full items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground cursor-pointer"
       >
-        <LogOut className="size-3.5 shrink-0" />
+        <LogOut className="size-4 shrink-0" />
         Sign out
       </button>
     </form>
+  );
+}
+
+function Logo() {
+  return (
+    <span className="text-sm font-medium tracking-widest text-foreground">
+      <span className="text-primary">▸</span> FINCENZO
+    </span>
   );
 }
 
@@ -97,65 +110,65 @@ export function AppSidebar({ userEmail }: { userEmail: string }) {
 
   return (
     <>
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar px-0 py-6 md:flex">
+      {/* Desktop sidebar — always in DOM but visually shown/hidden via CSS */}
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar py-6 md:flex">
         <div className="px-5 pb-8">
-          <span className="text-sm font-medium tracking-widest text-foreground">
-            <span className="text-primary">▸</span> FINCENZO
-          </span>
+          <Logo />
         </div>
         <NavList pathname={pathname} />
         <div className="mt-6 border-t border-border pt-4">
-          <div className="truncate px-5 pb-3 text-xs tracking-wide text-muted-foreground">{userEmail}</div>
+          <div className="truncate px-5 pb-3 text-xs tracking-wide text-muted-foreground">
+            {userEmail}
+          </div>
           <SignOut />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-sidebar px-4 md:hidden">
-        <span className="text-sm font-medium tracking-widest">
-          <span className="text-primary">▸</span> FINCENZO
-        </span>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-        >
-          <Menu className="size-4" />
-        </button>
-      </header>
-
-      {open ? (
-        <div className="fixed inset-0 z-40 md:hidden">
+      {/* Mobile top bar — only renders markup in DOM at <md */}
+      <div className="md:hidden">
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-sidebar px-4">
+          <Logo />
           <button
             type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/60"
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[85%] flex-col border-r border-border bg-sidebar px-0 py-6 shadow-xl">
-            <div className="flex items-center justify-between px-5 pb-8">
-              <span className="text-sm font-medium tracking-widest">
-                <span className="text-primary">▸</span> FINCENZO
-              </span>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close menu"
-                className="inline-flex size-7 items-center justify-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <NavList pathname={pathname} onNavigate={() => setOpen(false)} />
-            <div className="mt-6 border-t border-border pt-4">
-              <div className="truncate px-5 pb-3 text-xs tracking-wide text-muted-foreground">
-                {userEmail}
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
+            className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+          >
+            <Menu className="size-4" />
+          </button>
+        </header>
+
+        {open && (
+          <div className="fixed inset-0 z-40">
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 bg-black/60"
+            />
+            <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[85%] flex-col border-r border-border bg-sidebar py-6 shadow-xl">
+              <div className="flex items-center justify-between px-5 pb-8">
+                <Logo />
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close menu"
+                  className="inline-flex size-7 items-center justify-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
-              <SignOut />
-            </div>
-          </aside>
-        </div>
-      ) : null}
+              <NavList pathname={pathname} onNavigate={() => setOpen(false)} />
+              <div className="mt-6 border-t border-border pt-4">
+                <div className="truncate px-5 pb-3 text-xs tracking-wide text-muted-foreground">
+                  {userEmail}
+                </div>
+                <SignOut />
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
     </>
   );
 }
