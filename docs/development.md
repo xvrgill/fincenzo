@@ -83,3 +83,5 @@ npm run test:e2e -- --grep "redirect"       # one spec by name
 ## Environment variables
 
 See `.env.example` for the full list. Plaid access tokens are encrypted at rest with `PLAID_TOKEN_ENCRYPTION_KEY` (AES-256-GCM); the same key must be set in every environment that talks to the DB. Production additionally needs a real Plaid environment (`PLAID_ENV=production`, prod secret) and `CRON_SECRET` for the daily net-worth snapshot job.
+
+**Sentry** (optional locally, recommended in production). Set `NEXT_PUBLIC_SENTRY_DSN` to the project DSN and the SDK initializes for server, client, and edge runtimes via `src/instrumentation.ts` and `src/instrumentation-client.ts`. Leave it unset to disable — every init guards on the DSN and becomes a no-op. Optional `SENTRY_ENVIRONMENT` and `NEXT_PUBLIC_SENTRY_ENVIRONMENT` override the auto-detected env (defaults to `VERCEL_ENV` on Vercel, `development` otherwise).
