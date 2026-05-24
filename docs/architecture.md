@@ -11,11 +11,13 @@
 | ORM | **Drizzle** | TypeScript-first, thin, good migrations story. |
 | Auth | **Supabase Auth** | Bundled with the DB; one less service. Email + Google to start. |
 | Bank linking | **Plaid** | US-first, best-in-class coverage and DX. Wrapped behind an internal interface so we could swap aggregators later. |
-| Background jobs | **Inngest** (or Vercel Cron for simple cases) | Plaid webhook fan-out, periodic balance refresh, transaction re-sync. |
+| Background jobs | **Vercel Cron** + Plaid webhooks | Daily net-worth snapshot via cron; Plaid pushes transaction-sync events that fan out to `/api/plaid/webhook`. No dedicated job runner needed at this scale. |
 | Hosting | **Vercel** + Supabase | Trivial deploys; both have meaningful free tiers for a solo project. |
+| Observability | **Sentry** (`@sentry/nextjs`) | Server + client + edge capture via `instrumentation.ts`; `onRequestError` for uncaught route errors plus explicit captures in webhook and cron paths. PII off, replays off. |
+| Mobile | **PWA** (web app manifest + generated icons) | Installs to home screen on iOS/Android, runs standalone, safe-area-inset aware. Defers a true native build until the web experience hits its ceiling. |
 | Testing | **Vitest** + **Playwright** | Unit + a small smoke E2E suite around auth and Plaid link. |
 
-Things deliberately deferred: mobile app (PWA may be enough early), ML categorization (rules + Plaid's category first), multi-currency.
+Things deliberately deferred: native mobile app, ML categorization (rules + Plaid's category first), multi-currency.
 
 ## How the household model works
 
@@ -80,12 +82,13 @@ e2e/                Playwright specs
 
 ## Design direction
 
-The ACRU reference (saved as inspiration) sets the tone:
+The app ships in **dark mode** by default — near-black surface (`oklch(0.09 0 0)`), high-contrast off-white text, and a single saturated green (`oklch(0.68 0.18 145)`) used sparingly as the accent. The intent is "trading-terminal calm" rather than the bright pastel finance look: balances should feel like data you check, not gamified targets.
 
-- Light background, white cards with soft shadows, rounded corners (~16px).
-- Single accent color used sparingly to highlight positive trends and primary actions. Starting with a muted green; open to revisiting once there's something to look at.
-- Strong typographic hierarchy — large numerals for the headline figures, small uppercase labels.
-- Sidebar nav: Dashboard, Accounts, Transactions, Cash flow, Budget, Investments, Goals.
-- Charts are first-class, not afterthoughts. Bar/area for time series, donut/arc for composition, progress bars for budgets and goals.
+- Cards have subtle borders rather than shadows; rounded corners around 12-16px.
+- Single accent color (green) for primary actions, positive trends, and the ▸ logo mark. Red is reserved for over-budget and below-zero states (Mint/YNAB convention).
+- Strong typographic hierarchy — large tabular numerals for headline figures, small uppercase labels in mono for section headers.
+- Sidebar nav: Dashboard, Accounts, Transactions, Cash Flow, Budget, Investments, Net Worth, Goals, Subscriptions, Household.
+- Charts are first-class. Area for time series (with split-gradient red-below-zero / green-above-zero on the forecast chart), donut/arc for composition, progress bars for budgets and goals.
+- Mobile: drawer nav, stacked meta lines on dense rows, 36px tap targets, safe-area-inset on the sticky header so iOS notches don't overlap content in PWA standalone mode.
 
-We may inject more personality (illustration, a warmer secondary color, a distinctive empty-state voice) once the structure is in place. Easy to redesign later — keep components decoupled from brand specifics.
+Light mode and additional palette work are deferred — the dark default is the design.
