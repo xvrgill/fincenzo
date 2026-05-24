@@ -43,7 +43,7 @@ export default async function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
           <p className="text-sm text-muted-foreground">
@@ -76,11 +76,16 @@ export default async function AccountsPage() {
                 <CardHeader className="flex flex-row items-start justify-between gap-3">
                   <div>
                     <CardTitle>{item.institutionName ?? "Linked institution"}</CardTitle>
-                    <CardDescription>
-                      {itemAccounts.length} account{itemAccounts.length === 1 ? "" : "s"}
-                      {item.lastSyncedAt
-                        ? ` • last synced ${new Date(item.lastSyncedAt).toLocaleString()}`
-                        : ""}
+                    <CardDescription className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1.5">
+                      <span>
+                        {itemAccounts.length} account{itemAccounts.length === 1 ? "" : "s"}
+                      </span>
+                      {item.lastSyncedAt ? (
+                        <>
+                          <span className="hidden sm:inline">•</span>
+                          <span>last synced {new Date(item.lastSyncedAt).toLocaleString()}</span>
+                        </>
+                      ) : null}
                     </CardDescription>
                   </div>
                   <UnlinkItemButton
@@ -90,9 +95,9 @@ export default async function AccountsPage() {
                 </CardHeader>
                 <CardContent className="divide-y">
                   {itemAccounts.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                      <div>
-                        <p className="text-sm font-medium">
+                    <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
                           {a.name}
                           {a.mask ? (
                             <span className="ml-2 text-xs text-muted-foreground">••{a.mask}</span>

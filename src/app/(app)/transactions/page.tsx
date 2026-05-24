@@ -50,7 +50,7 @@ export default async function TransactionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
           <p className="text-sm text-muted-foreground">
@@ -86,8 +86,10 @@ export default async function TransactionsPage() {
                 const outgoing = t.amountCents > 0;
                 const merchantLabel = t.merchantName ?? t.name;
                 return (
-                  <div key={t.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3">
-                    <div className="w-20 text-xs text-muted-foreground">{formatDate(t.date)}</div>
+                  <div key={t.id} className="grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_1fr_auto] sm:gap-4">
+                    <div className="hidden w-20 text-xs text-muted-foreground sm:block">
+                      {formatDate(t.date)}
+                    </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">
                         {merchantLabel}
@@ -97,12 +99,13 @@ export default async function TransactionsPage() {
                           </span>
                         ) : null}
                       </p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-1 sm:gap-y-0.5">
+                        <span className="sm:hidden">{formatDate(t.date)}</span>
                         <span className="truncate">
                           {t.accountName}
                           {t.accountMask ? ` ••${t.accountMask}` : ""}
                         </span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         {canEdit(t.ownerUserId) ? (
                           <CategoryPicker
                             transactionId={t.id}

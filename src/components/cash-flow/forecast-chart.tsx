@@ -31,7 +31,17 @@ export function ForecastChart({ data }: { data: ForecastChartPoint[] }) {
   useEffect(() => setMounted(true), []);
 
   const chartData = data.map((p) => ({ date: p.date, balance: p.balanceCents / 100 }));
-  const hasNegative = chartData.some((p) => p.balance < 0);
+  const values = chartData.map((p) => p.balance);
+  const dataMax = values.length ? Math.max(...values) : 0;
+  const dataMin = values.length ? Math.min(...values) : 0;
+  const hasNegative = dataMin < 0;
+  // Offset along the y-axis (0% = top, 100% = bottom) where balance crosses zero.
+  // Clamp so we still get a clean single-color fill when all values share a sign.
+  const zeroOffset =
+    dataMax <= 0 ? 0 : dataMin >= 0 ? 1 : dataMax / (dataMax - dataMin);
+
+  const green = "oklch(0.68 0.18 145)";
+  const red = "oklch(0.62 0.20 25)";
 
   if (!mounted) return <div style={{ height: 320 }} />;
 
@@ -41,8 +51,16 @@ export function ForecastChart({ data }: { data: ForecastChartPoint[] }) {
         <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
           <defs>
             <linearGradient id="forecastFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.68 0.18 145)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="oklch(0.68 0.18 145)" stopOpacity={0} />
+              <stop offset="0%" stopColor={green} stopOpacity={0.3} />
+              <stop offset={`${zeroOffset * 100}%`} stopColor={green} stopOpacity={0} />
+              <stop offset={`${zeroOffset * 100}%`} stopColor={red} stopOpacity={0} />
+              <stop offset="100%" stopColor={red} stopOpacity={0.3} />
+            </linearGradient>
+            <linearGradient id="forecastStroke" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={green} />
+              <stop offset={`${zeroOffset * 100}%`} stopColor={green} />
+              <stop offset={`${zeroOffset * 100}%`} stopColor={red} />
+              <stop offset="100%" stopColor={red} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="var(--border)" vertical={false} strokeDasharray="2 4" />
@@ -65,7 +83,7 @@ export function ForecastChart({ data }: { data: ForecastChartPoint[] }) {
             axisLine={false}
             width={64}
           />
-          {hasNegative ? <ReferenceLine y={0} stroke="oklch(0.62 0.20 25)" strokeDasharray="3 3" /> : null}
+          {hasNegative ? <ReferenceLine y={0} stroke={red} strokeDasharray="3 3" /> : null}
           <Tooltip
             cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
             contentStyle={{
@@ -88,7 +106,7 @@ export function ForecastChart({ data }: { data: ForecastChartPoint[] }) {
           <Area
             type="monotone"
             dataKey="balance"
-            stroke="oklch(0.68 0.18 145)"
+            stroke="url(#forecastStroke)"
             strokeWidth={2}
             fill="url(#forecastFill)"
           />

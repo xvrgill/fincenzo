@@ -64,8 +64,8 @@ export default async function SubscriptionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">Subscriptions</h1>
           <p className="text-sm text-muted-foreground">
             Recurring charges detected from your transactions. Confirm the ones you want to track or
@@ -136,10 +136,10 @@ function RowList({ rows, kind }: { rows: Row[]; kind: "confirmed" | "suggested" 
   return (
     <ul className="divide-y">
       {rows.map((r) => (
-        <li key={r.id} className="flex items-center justify-between gap-4 py-3">
-          <div className="min-w-0">
+        <li key={r.id} className="flex items-center justify-between gap-3 py-3">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{r.merchantName}</p>
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="break-words text-xs text-muted-foreground tabular-nums">
               {CADENCE_LABEL[r.cadence]} • {formatMoneyCents(r.averageAmountCents)} •{" "}
               {r.sampleCount} charges
               {r.category ? ` • ${prettifyCategory(r.category)}` : ""}

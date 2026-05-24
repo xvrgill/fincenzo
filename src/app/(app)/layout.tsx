@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen flex-1 flex-col md:flex-row">
       <AppSidebar userEmail={user.email ?? ""} />
-      <main className="flex-1 overflow-x-hidden bg-background">
+      <main className="min-w-0 flex-1 bg-background">
         <InviteBanner invites={invites} />
         {household.inHousehold ? (
           <div className="border-b border-border bg-card/40">
