@@ -11,6 +11,7 @@ export type ActivityKind =
   | "invite.declined"
   | "account.shared"
   | "account.unshared"
+  | "account.unlinked"
   | "budget.created"
   | "budget.deleted"
   | "goal.created"

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LinkAccountButton } from "@/components/link-account-button";
 import { SyncButton } from "@/components/sync-button";
 import { VisibilityToggle } from "@/components/accounts/visibility-toggle";
+import { UnlinkItemButton } from "@/components/accounts/unlink-item-button";
 import { formatMoneyCents } from "@/lib/format";
 import { getHouseholdState } from "@/lib/queries/household";
 
@@ -72,14 +73,20 @@ export default async function AccountsPage() {
             const itemAccounts = accountsByItem.get(item.id) ?? [];
             return (
               <Card key={item.id}>
-                <CardHeader>
-                  <CardTitle>{item.institutionName ?? "Linked institution"}</CardTitle>
-                  <CardDescription>
-                    {itemAccounts.length} account{itemAccounts.length === 1 ? "" : "s"}
-                    {item.lastSyncedAt
-                      ? ` • last synced ${new Date(item.lastSyncedAt).toLocaleString()}`
-                      : ""}
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-start justify-between gap-3">
+                  <div>
+                    <CardTitle>{item.institutionName ?? "Linked institution"}</CardTitle>
+                    <CardDescription>
+                      {itemAccounts.length} account{itemAccounts.length === 1 ? "" : "s"}
+                      {item.lastSyncedAt
+                        ? ` • last synced ${new Date(item.lastSyncedAt).toLocaleString()}`
+                        : ""}
+                    </CardDescription>
+                  </div>
+                  <UnlinkItemButton
+                    id={item.id}
+                    institutionName={item.institutionName ?? "this institution"}
+                  />
                 </CardHeader>
                 <CardContent className="divide-y">
                   {itemAccounts.map((a) => (

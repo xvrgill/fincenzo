@@ -8,6 +8,7 @@ import {
   PiggyBank,
   Target,
   Undo2,
+  Unlink,
   UserMinus,
   UserPlus,
   type LucideIcon,
@@ -24,6 +25,7 @@ const ICON_BY_KIND: Record<string, LucideIcon> = {
   "invite.declined": UserMinus,
   "account.shared": Eye,
   "account.unshared": EyeOff,
+  "account.unlinked": Unlink,
   "budget.created": PiggyBank,
   "budget.deleted": PiggyBank,
   "goal.created": Target,
@@ -61,6 +63,8 @@ function describe(entry: ActivityEntry): string {
       return `shared account ${p.accountName ?? ""}${p.mask ? ` ••${p.mask}` : ""}`;
     case "account.unshared":
       return `unshared account ${p.accountName ?? ""}${p.mask ? ` ••${p.mask}` : ""}`;
+    case "account.unlinked":
+      return `unlinked ${p.institutionName ?? "an institution"}`;
     case "budget.created":
       return `set a ${formatMoneyCents(Number(p.limitCents ?? 0))} budget for ${prettifyCategory(String(p.category ?? ""))}`;
     case "budget.deleted":
