@@ -39,7 +39,7 @@ export async function verifyWebhook(rawBody: string, jwtHeader: string | null): 
 
   let payload: Record<string, unknown>;
   try {
-    const verified = await jwtVerify(jwtHeader, key);
+    const verified = await jwtVerify(jwtHeader, key, { algorithms: ["ES256"] });
     payload = verified.payload as Record<string, unknown>;
   } catch {
     return false;
