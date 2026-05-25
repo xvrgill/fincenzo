@@ -29,5 +29,10 @@ Built in phases — solo experience first, household features layered on once th
 - Cash-flow forecasting ✅
 - CSV transaction export ✅ (year-end summary PDF still a stretch goal)
 - PWA / mobile-friendly layout pass ✅ (mobile drawer nav, responsive sweep of dense pages, web app manifest + generated `icon` / `apple-icon` routes, `themeColor` + `viewportFit=cover`, safe-area-inset on the sticky header)
-- Plaid production approval + JWT-verified webhooks (`src/lib/plaid/webhook-verify.ts` already in place)
+- JWT-verified Plaid webhooks ✅ (`src/lib/plaid/webhook-verify.ts` wired into `/api/plaid/webhook`, covered by `webhook-verify.test.ts`)
+- Plaid production approval — external process; see [docs/plaid-production.md](./plaid-production.md) for the checklist
 - Error monitoring ✅ (Sentry: server + client + edge init via `instrumentation.ts`, `onRequestError` hook, explicit captures in `/api/plaid/webhook` and `/api/cron/snapshot`, build-time source-map upload via `withSentryConfig` in `next.config.ts`, error-only Session Replay with `maskAllText`/`maskAllInputs`/`blockAllMedia`)
+
+## Phase 4 — Post-launch
+
+- Plaid OAuth support — required for Chase, Capital One, Wells Fargo, Bank of America, US Bank, Citi, USAA, Fidelity, and other OAuth-only institutions. Needs a `/plaid-oauth` route that re-opens Link with `receivedRedirectUri`, a `redirect_uri` added to `linkTokenCreate` in `/api/plaid/link-token`, and the same URL registered in Plaid Dashboard → Team Settings → API → Allowed redirect URIs. Until shipped, only non-OAuth banks/credit unions can link in production.
