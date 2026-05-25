@@ -41,8 +41,20 @@ Every user has to re-link their institutions in production. Sandbox
 
 ## 4. Webhooks
 
-Register the production webhook URL in the Plaid Dashboard → Team Settings →
-Webhooks: `https://<prod-domain>/api/plaid/webhook`.
+There is nothing to configure in the Plaid Dashboard for our setup. The
+"Webhooks" page under Developers in the Dashboard is for **account-level**
+webhooks (Transfer, Signal, Income, Monitor) — products we don't use.
+
+The Transactions webhook is bound **per-Item** at link time. See
+[`src/app/api/plaid/link-token/route.ts`](../src/app/api/plaid/link-token/route.ts):
+`linkTokenCreate` is called with `webhook: ${NEXT_PUBLIC_SITE_URL}/api/plaid/webhook`,
+so every newly linked institution starts pinging our endpoint automatically.
+
+The only production requirement is that `NEXT_PUBLIC_SITE_URL` in Vercel's
+Production environment points at the real production domain (e.g.
+`https://fincenzo.com`). Items linked while that variable was unset or pointed
+elsewhere will keep using the old URL — fix those with `/item/webhook/update`
+or by re-linking.
 
 Signature verification is already wired up. Every request to
 [`/api/plaid/webhook`](../src/app/api/plaid/webhook/route.ts) runs through
@@ -57,13 +69,18 @@ Signature verification is already wired up. Every request to
 Unverified requests get a 401. There is no dev bypass — Plaid signs sandbox
 webhooks too, so local testing with the Plaid CLI or ngrok works the same way.
 
-## 5. OAuth redirect URIs (only if connecting OAuth institutions)
+## 5. OAuth redirect URIs — not yet supported
 
-For Chase, Capital One, etc., add the production redirect URI in the Plaid
-Dashboard → Team Settings → API → Allowed redirect URIs:
-`https://<prod-domain>/plaid-oauth` (or whatever path the Link component
-handles the OAuth return on — verify against the current Link integration
-before launch).
+OAuth-only institutions (Chase, Capital One, Wells Fargo, Bank of America, US
+Bank, Citi, USAA, Fidelity, and others) **will not link in production until
+OAuth is implemented**. The current Link integration in
+[`src/components/link-account-button.tsx`](../src/components/link-account-button.tsx)
+does not pass `redirect_uri` or handle `receivedRedirectUri`, and no
+`/plaid-oauth` route exists.
+
+Tracked as a Phase 4 item in [roadmap.md](./roadmap.md). Until it ships, expect
+users who try to link an OAuth-required bank to see Plaid Link error out
+mid-flow.
 
 ## 6. Post-launch monitoring
 
