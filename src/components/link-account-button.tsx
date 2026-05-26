@@ -76,8 +76,19 @@ export function LinkAccountButton() {
 
   // Open Link as soon as the relevant token+SDK become ready for the picked
   // mode. The dropdown item fires before the SDK is necessarily initialized.
+  // Before opening, stash the token in sessionStorage so the OAuth resume
+  // page (/plaid-oauth) can re-init Link with `receivedRedirectUri` for
+  // OAuth institutions like Chase, Fidelity, etc.
   useEffect(() => {
+    const stash = (token: string) => {
+      sessionStorage.setItem("plaid:oauth:link_token", token);
+      sessionStorage.setItem(
+        "plaid:oauth:flow",
+        JSON.stringify({ flow: "new" }),
+      );
+    };
     if (pending === "banking" && banking.ready && bankingToken) {
+      stash(bankingToken);
       banking.open();
       setPending((p) => (p === "banking" ? null : p));
     } else if (
@@ -85,6 +96,7 @@ export function LinkAccountButton() {
       investments.ready &&
       investmentsToken
     ) {
+      stash(investmentsToken);
       investments.open();
       setPending((p) => (p === "investments" ? null : p));
     }

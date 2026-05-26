@@ -34,6 +34,7 @@ export async function POST(request: Request) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const webhook = siteUrl ? `${siteUrl}/api/plaid/webhook` : undefined;
+  const redirectUri = siteUrl ? `${siteUrl}/plaid-oauth` : undefined;
 
   const { data } = await plaid.linkTokenCreate({
     user: { client_user_id: user.id },
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     language: "en",
     access_token: decryptToken(item.accessToken),
     webhook,
+    redirect_uri: redirectUri,
   });
 
   return NextResponse.json({ link_token: data.link_token });

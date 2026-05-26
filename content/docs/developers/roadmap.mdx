@@ -50,7 +50,7 @@ Built in phases — solo experience first, household features layered on once th
 - 🔲 **Mobile pass on wide tables** — transactions, holdings, subscriptions are the remaining horizontal-scroll offenders.
 - 🔲 **Pagefind search across the docs** (also listed under Phase 3.5).
 - 🔲 **Investments day-change** — needs a daily security price snapshot table; deferred from the initial investments ship.
-- 🔲 **Split Plaid Link entrypoint (banking vs. investments)** — investments-only brokers (Fidelity, Vanguard, Schwab, E*TRADE, Robinhood) don't support Plaid's Transactions product, so a single link token with `products: [Transactions]` filters them out. Fix is two link tokens: banking mode (current) and an investments mode with `products: [Investments]` + `required_if_supported_products: [Transactions]`. UI becomes a dropdown on the accounts page.
+- ✅ **Split Plaid Link entrypoint (banking vs. investments)** — `/api/plaid/link-token` accepts `{ mode }`; investments mode swaps `products: [Investments]` with Transactions as `required_if_supported_products`. Accounts page exposes both via a dropdown.
 - 🔲 **Year-end summary PDF** — stretch goal alongside the existing CSV export.
 
 ## Phase 3.5 — Marketing site & docs ✅ (mostly)
@@ -65,4 +65,4 @@ Built in phases — solo experience first, household features layered on once th
 
 ## Phase 4 — Post-launch
 
-- **Plaid OAuth support** — required for Chase, Capital One, Wells Fargo, Bank of America, US Bank, Citi, USAA, Fidelity, and other OAuth-only institutions. Needs a `/plaid-oauth` route that re-opens Link with `receivedRedirectUri`, a `redirect_uri` added to `linkTokenCreate` in `/api/plaid/link-token`, and the same URL registered in Plaid Dashboard → Team Settings → API → Allowed redirect URIs. Until shipped, only non-OAuth banks/credit unions can link in production.
+- 🟡 **Plaid OAuth support** (in review) — required for Chase, Capital One, Wells Fargo, Bank of America, US Bank, Citi, USAA, Fidelity, and other OAuth-only institutions. `/plaid-oauth` route re-opens Link with `receivedRedirectUri`, `redirect_uri` added to `linkTokenCreate` in both new-link and update-mode token routes, link token stashed in `sessionStorage` before handoff so the resume page can recover it. The URL still needs to be registered in Plaid Dashboard → Team Settings → API → Allowed redirect URIs for each environment.
