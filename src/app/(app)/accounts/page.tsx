@@ -62,7 +62,9 @@ export default async function AccountsPage() {
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <p className="text-sm text-muted-foreground">No accounts linked yet.</p>
             <p className="text-xs text-muted-foreground">
-              Use the &ldquo;Link account&rdquo; button above. In Plaid sandbox, sign in with{" "}
+              Use the &ldquo;Link account&rdquo; button above — pick &ldquo;Bank or
+              credit card&rdquo; or &ldquo;Investment account&rdquo; depending on
+              the institution. In Plaid sandbox, sign in with{" "}
               <code className="rounded bg-muted px-1">user_good</code> /{" "}
               <code className="rounded bg-muted px-1">pass_good</code>.
             </p>

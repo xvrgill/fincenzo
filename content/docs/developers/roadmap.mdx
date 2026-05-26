@@ -50,6 +50,7 @@ Built in phases — solo experience first, household features layered on once th
 - 🔲 **Mobile pass on wide tables** — transactions, holdings, subscriptions are the remaining horizontal-scroll offenders.
 - 🔲 **Pagefind search across the docs** (also listed under Phase 3.5).
 - 🔲 **Investments day-change** — needs a daily security price snapshot table; deferred from the initial investments ship.
+- 🔲 **Split Plaid Link entrypoint (banking vs. investments)** — investments-only brokers (Fidelity, Vanguard, Schwab, E*TRADE, Robinhood) don't support Plaid's Transactions product, so a single link token with `products: [Transactions]` filters them out. Fix is two link tokens: banking mode (current) and an investments mode with `products: [Investments]` + `required_if_supported_products: [Transactions]`. UI becomes a dropdown on the accounts page.
 - 🔲 **Year-end summary PDF** — stretch goal alongside the existing CSV export.
 
 ## Phase 3.5 — Marketing site & docs ✅ (mostly)
