@@ -61,8 +61,17 @@ export function ReconnectButton({ itemId }: { itemId: string }) {
   };
 
   useEffect(() => {
-    if (linkToken && ready) open();
-  }, [linkToken, ready, open]);
+    if (linkToken && ready) {
+      // Stash for the OAuth resume page (/plaid-oauth) in case Plaid hands
+      // the user off to the bank's site for re-auth.
+      sessionStorage.setItem("plaid:oauth:link_token", linkToken);
+      sessionStorage.setItem(
+        "plaid:oauth:flow",
+        JSON.stringify({ flow: "update", itemId }),
+      );
+      open();
+    }
+  }, [linkToken, ready, open, itemId]);
 
   return (
     <div className="flex flex-col items-end gap-1">

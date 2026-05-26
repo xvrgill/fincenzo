@@ -27,6 +27,10 @@ export async function POST(request: Request) {
   // those via /item/webhook/update or just re-link.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const webhook = siteUrl ? `${siteUrl}/api/plaid/webhook` : undefined;
+  // OAuth institutions (Chase, Capital One, Fidelity, etc.) require Link to
+  // hand off to the bank's site and redirect back here. This URL must also
+  // be registered in Plaid Dashboard → Team Settings → API → Allowed redirect URIs.
+  const redirectUri = siteUrl ? `${siteUrl}/plaid-oauth` : undefined;
 
   // Plaid filters institutions to those supporting every entry in `products`.
   // Brokers like Fidelity/Vanguard/Schwab don't support Transactions, so a
@@ -48,6 +52,7 @@ export async function POST(request: Request) {
     country_codes: [CountryCode.Us],
     language: "en",
     webhook,
+    redirect_uri: redirectUri,
   });
 
   return NextResponse.json({ link_token: data.link_token });
