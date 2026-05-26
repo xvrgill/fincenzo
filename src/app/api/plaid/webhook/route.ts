@@ -6,6 +6,7 @@ import { plaidItems } from "@/lib/db/schema";
 import { syncItem } from "@/lib/plaid/sync";
 import { snapshotNetWorth } from "@/lib/queries/net-worth";
 import { verifyWebhook } from "@/lib/plaid/webhook-verify";
+import { PlaidApiError } from "@/lib/plaid/errors";
 
 // Plaid sends webhooks for many event types. We act on the transactions-sync
 // signals and ignore the rest (acknowledged with 200 so Plaid stops retrying).
@@ -60,10 +61,19 @@ export async function POST(request: Request) {
     await syncItem(item.id);
     await snapshotNetWorth(item.userId);
   } catch (err) {
-    Sentry.captureException(err, {
-      tags: { area: "plaid-webhook", webhook_code: webhook_code ?? "unknown" },
-      extra: { itemId: item.id },
-    });
+    const tags: Record<string, string> = {
+      area: "plaid-webhook",
+      webhook_code: webhook_code ?? "unknown",
+    };
+    const extra: Record<string, unknown> = { itemId: item.id };
+    if (err instanceof PlaidApiError) {
+      tags.endpoint = err.endpoint;
+      tags.plaid_error_code = err.body.error_code ?? "UNKNOWN";
+      tags.plaid_error_type = err.body.error_type ?? "UNKNOWN";
+      extra.status = err.status;
+      extra.body = err.body;
+    }
+    Sentry.captureException(err, { tags, extra });
     throw err;
   }
   return NextResponse.json({ ok: true, synced: item.id });

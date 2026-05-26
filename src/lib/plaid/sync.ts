@@ -2,8 +2,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { accounts, plaidItems, transactions } from "@/lib/db/schema";
 import { loadUserRules, matchRule } from "@/lib/rules";
+import * as Sentry from "@sentry/nextjs";
 import { decryptToken } from "@/lib/crypto";
 import { plaid } from "./client";
+import { callPlaid, PlaidApiError } from "./errors";
 
 type PlaidAccountType = "depository" | "credit" | "loan" | "investment" | "brokerage" | "other";
 
@@ -26,7 +28,9 @@ export async function syncAccounts(itemId: string) {
   const item = await db.query.plaidItems.findFirst({ where: eq(plaidItems.id, itemId) });
   if (!item) throw new Error(`plaid_item ${itemId} not found`);
 
-  const { data } = await plaid.accountsGet({ access_token: decryptToken(item.accessToken) });
+  const { data } = await callPlaid("accounts/get", () =>
+    plaid.accountsGet({ access_token: decryptToken(item.accessToken) }),
+  );
 
   for (const acct of data.accounts) {
     const mappedType = accountTypeMap[acct.type as PlaidAccountType] ?? "other";
@@ -93,10 +97,12 @@ export async function syncTransactions(itemId: string) {
   let totalRemoved = 0;
 
   while (hasMore) {
-    const { data } = await plaid.transactionsSync({
-      access_token: accessToken,
-      cursor,
-    });
+    const { data } = await callPlaid("transactions/sync", () =>
+      plaid.transactionsSync({
+        access_token: accessToken,
+        cursor,
+      }),
+    );
 
     for (const t of data.added) {
       const accountId = acctByPlaidId.get(t.account_id);
@@ -163,11 +169,44 @@ export async function syncItem(itemId: string) {
   return await syncTransactions(itemId);
 }
 
-export async function syncAllItems(userId: string) {
+export type SyncItemResult =
+  | { itemId: string; ok: true; added: number; modified: number; removed: number }
+  | { itemId: string; ok: false; errorCode: string; errorType?: string; errorMessage?: string; requestId?: string };
+
+export async function syncAllItems(userId: string): Promise<SyncItemResult[]> {
   const items = await db.select({ id: plaidItems.id }).from(plaidItems).where(eq(plaidItems.userId, userId));
-  const results = [];
+  const results: SyncItemResult[] = [];
   for (const it of items) {
-    results.push({ itemId: it.id, ...(await syncItem(it.id)) });
+    try {
+      const r = await syncItem(it.id);
+      results.push({ itemId: it.id, ok: true, ...r });
+    } catch (err) {
+      if (err instanceof PlaidApiError) {
+        Sentry.captureException(err, {
+          tags: {
+            area: "plaid-sync",
+            endpoint: err.endpoint,
+            plaid_error_code: err.body.error_code ?? "UNKNOWN",
+            plaid_error_type: err.body.error_type ?? "UNKNOWN",
+          },
+          extra: { itemId: it.id, status: err.status, body: err.body },
+        });
+        results.push({
+          itemId: it.id,
+          ok: false,
+          errorCode: err.body.error_code ?? "UNKNOWN",
+          errorType: err.body.error_type,
+          errorMessage: err.body.error_message,
+          requestId: err.body.request_id,
+        });
+      } else {
+        Sentry.captureException(err, {
+          tags: { area: "plaid-sync" },
+          extra: { itemId: it.id },
+        });
+        results.push({ itemId: it.id, ok: false, errorCode: "UNEXPECTED" });
+      }
+    }
   }
   return results;
 }
