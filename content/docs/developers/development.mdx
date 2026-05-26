@@ -1,4 +1,11 @@
-# Development
+---
+title: Local development
+description: Get the app running locally — environment, migrations, Plaid sandbox, scripts, and tests.
+section: Developers
+order: 1
+---
+
+# Local development
 
 Local setup, scripts, and testing.
 
@@ -16,7 +23,7 @@ Local setup, scripts, and testing.
    npm install
    ```
 
-2. **Create a Supabase project** at https://supabase.com. From Project Settings:
+2. **Create a Supabase project** at [supabase.com](https://supabase.com). From Project Settings:
    - **API** tab: copy the Project URL and `anon` key.
    - **Database** tab: copy the "Transaction pooler" connection string (works for both runtime queries and Drizzle migrations in dev).
 
@@ -37,7 +44,7 @@ Local setup, scripts, and testing.
 
 5. **Wire Supabase auth to the app schema.** Open the Supabase SQL editor and run `supabase/setup.sql`. This adds an `auth.users → public.users` foreign key and a trigger that creates a `public.users` row on signup.
 
-6. **Get Plaid sandbox credentials.** Sign up at https://dashboard.plaid.com. From the dashboard:
+6. **Get Plaid sandbox credentials.** Sign up at [dashboard.plaid.com](https://dashboard.plaid.com). From the dashboard:
    - Copy your `client_id` and **Sandbox** `secret` into `PLAID_CLIENT_ID` and `PLAID_SECRET` in `.env.local`.
    - Leave `PLAID_ENV=sandbox`.
 
@@ -49,7 +56,7 @@ Local setup, scripts, and testing.
    npm run dev
    ```
 
-   Visit http://localhost:3000 — you'll be redirected to `/sign-in`. Create an account, confirm via email, and you'll land on the dashboard.
+   Visit [localhost:3000](http://localhost:3000) — the landing page renders publicly; sign in or join the waitlist from the nav. To get directly into the app, sign in at `/sign-in` (existing users) or `/sign-up?token=...` if you've been issued an invite token via `/admin/waitlist`.
 
 ## Scripts
 
@@ -80,9 +87,21 @@ npm test -- src/lib/crypto.test.ts          # one file
 npm run test:e2e -- --grep "redirect"       # one spec by name
 ```
 
+## Docs site
+
+The user-facing docs you're reading right now live in `content/docs/**/*.mdx`. To add a page:
+
+1. Drop a new `.mdx` file in `content/docs/` (or a subdirectory).
+2. Add frontmatter: `title` (required), `description`, `section`, `order`.
+3. The catch-all route at `src/app/(marketing)/docs/[[...slug]]/page.tsx` discovers it on next build via `generateStaticParams`.
+
+The sidebar groups by `section:` and orders within a section by `order:`. Sections themselves are ordered via the curated list in `src/lib/docs.ts`.
+
 ## Environment variables
 
 See `.env.example` for the full list. Plaid access tokens are encrypted at rest with `PLAID_TOKEN_ENCRYPTION_KEY` (AES-256-GCM); the same key must be set in every environment that talks to the DB. Production additionally needs a real Plaid environment (`PLAID_ENV=production`, prod secret) and `CRON_SECRET` for the daily net-worth snapshot job.
+
+`ADMIN_EMAILS` is a comma-separated allowlist of users who can reach `/admin/waitlist` to issue invite tokens. Unset = no admins, the route 404s.
 
 **Sentry** (optional locally, recommended in production). Set `NEXT_PUBLIC_SENTRY_DSN` to the project DSN and the SDK initializes for server, client, and edge runtimes via `src/instrumentation.ts` and `src/instrumentation-client.ts`. Leave it unset to disable — every init guards on the DSN and becomes a no-op. Optional `SENTRY_ENVIRONMENT` and `NEXT_PUBLIC_SENTRY_ENVIRONMENT` override the auto-detected env (defaults to `VERCEL_ENV` on Vercel, `development` otherwise).
 

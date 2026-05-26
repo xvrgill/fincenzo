@@ -40,13 +40,16 @@ Sharing is per-account, opt-in, and reversible. A partner never sees what you ha
 
 ## Roadmap
 
-Phases 1 (solo) and 2 (households) are shipped. Phase 3 (recurring/subscription tracking, cash-flow forecasting, exports, mobile polish) is in progress. See [docs/roadmap.md](docs/roadmap.md) for the full breakdown.
+Phases 1 (solo) and 2 (households) are shipped. Phase 3 (recurring/subscription tracking, cash-flow forecasting, exports, mobile polish) is in progress. See the [roadmap](content/docs/developers/roadmap.mdx) for the full breakdown.
 
 ## For developers
 
-- 📘 [Architecture & tech stack](docs/architecture.md)
-- 🛠️ [Local development & testing](docs/development.md)
-- 🗺️ [Roadmap](docs/roadmap.md)
+Docs live under [content/docs/](content/docs/) and render at `/docs` on the running site. The developer-focused pages are:
+
+- 📘 [Architecture & tech stack](content/docs/developers/architecture.mdx)
+- 🛠️ [Local development & testing](content/docs/developers/development.mdx)
+- 🚀 [Going to production with Plaid](content/docs/developers/plaid-production.mdx)
+- 🗺️ [Roadmap](content/docs/developers/roadmap.mdx)
 
 ---
 

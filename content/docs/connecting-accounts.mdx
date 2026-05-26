@@ -1,0 +1,91 @@
+---
+title: Connecting accounts
+description: How Plaid links your bank to Fincenzo, what gets synced, and what to do when something doesn't.
+section: Connecting accounts
+order: 0
+---
+
+# Connecting accounts
+
+Fincenzo doesn't connect to your bank directly. It uses **Plaid**, the same service most modern money apps use, to do the actual handshake. Your bank credentials go straight to Plaid on a Plaid-hosted screen — Fincenzo never sees them.
+
+## How it works
+
+1. From the **Accounts** page, click **Link an institution**.
+2. A Plaid modal opens. Search for your bank and pick it.
+3. Log in on Plaid's screen. If your bank uses MFA, you'll do that too.
+4. Plaid asks which accounts you want to share. Pick any/all of them.
+5. Plaid returns to Fincenzo with an access token. We encrypt it (AES-256-GCM) and store it. The first sync starts in the background within seconds.
+
+You can repeat this for as many institutions as you like — checking at one bank, credit card at another, brokerage at a third.
+
+## What gets synced
+
+For each linked account:
+
+- **Balances** — current and available, refreshed on Plaid's schedule (usually a few times a day).
+- **Transactions** — Plaid backfills roughly the last 90 days on first link, then keeps it current via webhooks.
+- **Account metadata** — masked number (e.g. `••1234`), name, type, subtype, currency.
+
+Investment accounts also pull **holdings** when Plaid supports it for that institution.
+
+<Callout type="note">
+  The very first transaction sync can take a minute or two — Plaid pulls 90 days of history. Subsequent updates land within seconds of your bank posting them.
+</Callout>
+
+## Which banks work today
+
+Plaid supports thousands of US institutions. **In the current beta, only non-OAuth institutions work in production.** This is a Plaid-side requirement, not a Fincenzo one.
+
+That covers most credit unions, community banks, neobanks, and quite a few major institutions. The notable exceptions that **don't work yet** are the OAuth-only banks:
+
+- Chase
+- Capital One
+- Wells Fargo
+- Bank of America
+- US Bank
+- Citi
+- USAA
+- Fidelity
+
+Adding OAuth support is on the [roadmap](/docs/developers/roadmap) but isn't shipped. If your bank is on this list, you can still try linking — Plaid will tell you OAuth is required and the link will fail gracefully.
+
+## Re-authentication
+
+Banks periodically expire their authorization for security reasons. When that happens:
+
+1. The affected account shows an **"action required"** badge on the Accounts page.
+2. Click it to re-open Plaid Link in **update mode** — you only re-enter your credentials, you don't re-pick accounts.
+3. Once Plaid hands back a fresh token, syncing resumes automatically.
+
+Most banks force re-auth every 90 days or so. Some (e.g. Capital One via OAuth) require it more often.
+
+## Unlinking
+
+To stop syncing an institution entirely, open **Accounts**, find the institution, and click **Unlink**.
+
+This:
+
+- Tells Plaid to revoke the access token (no more webhooks for this item).
+- Marks every account from that institution as unlinked in Fincenzo.
+- **Keeps your historical transactions** so charts and budgets don't lose data.
+
+If you want the transactions gone too, delete your account from **Settings → Account → Delete account** (see [Privacy & data](/docs/privacy)).
+
+## Troubleshooting
+
+### "Couldn't link" or the modal closes immediately
+
+Almost always a Plaid-side error. Refresh the page and try again. If it persists, check the browser console — Plaid surfaces a specific error code there.
+
+### Transactions look stuck / out of date
+
+Open the account on the **Accounts** page and click **Sync now**. This bypasses the webhook and asks Plaid for a fresh batch immediately. If the sync still doesn't move, your bank may have expired the token — look for the action-required badge.
+
+### Wrong category on a transaction
+
+That's a categorization concern, not a sync one — see [Categorization & rules](/docs/categorization).
+
+### Duplicate transactions
+
+Plaid occasionally double-posts a pending transaction once it clears. Fincenzo deduplicates by Plaid's `transaction_id`, so the duplicate should resolve within a sync or two. If a duplicate persists for more than a day, [open an issue](https://github.com/xvrgill/fincenzo/issues).

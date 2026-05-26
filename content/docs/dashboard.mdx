@@ -1,0 +1,62 @@
+---
+title: Your dashboard
+description: What every tile, chart, and number on the Fincenzo dashboard actually means.
+section: Personal finance
+order: 0
+---
+
+# Your dashboard
+
+The dashboard is the 30-second view. Open it, glance at it, close it. Anything that needs more attention has a deeper page behind it.
+
+## Top row — the four stat tiles
+
+Across the top you'll see four numbers, each with a comparison vs. the prior month:
+
+- **Net worth** — assets minus liabilities, right now. The big one.
+- **Income (this month)** — money coming in: salary, transfers in, refunds.
+- **Expenses (this month)** — money going out, excluding internal transfers between your own accounts.
+- **Cash flow (this month)** — income minus expenses. Green if positive, red if negative.
+
+The percentage delta next to each number compares to the same point in the prior month, so early in the month the deltas swing wildly — that's expected.
+
+## Balance overview chart
+
+A daily line chart of your net worth over the last 30 days. Each point is a snapshot taken at end-of-day by a [scheduled job](/docs/developers/architecture), so the line keeps moving even when you don't open the app.
+
+Hover any point to see the exact value and date. The dashboard chart is the short version of the full picture — for the year-or-more view, jump to [Net worth](/docs/developers/architecture#net-worth-snapshots).
+
+## Category breakdown
+
+A bar chart of where your expenses went this month, grouped by category. The categories themselves come from Plaid by default but you can override them — see [Categorization & rules](/docs/categorization).
+
+Categories are sorted largest first. The "Other" bucket sweeps up anything below the top 8 categories so the chart stays readable.
+
+## Recent transactions
+
+The last ten transactions across **all** linked accounts. Click any row to open the full transaction record where you can:
+
+- Recategorize it (and optionally turn that into a rule).
+- Add a note.
+- See the underlying Plaid data.
+
+For the full searchable list, go to **Transactions** in the sidebar.
+
+## Personal vs. household scope
+
+If you've joined a household, you'll see a **scope switcher** at the top right that toggles between:
+
+- **Personal** — all your accounts, shared and private.
+- **Household** — only accounts you and your partner have both opted to share.
+
+The dashboard recomputes every tile and chart based on the selected scope. Your private accounts never appear in the household view, even when you're the one looking at it.
+
+See [Households](/docs/households) for the full story.
+
+## What's not on the dashboard
+
+- **Budgets** — the dashboard shows spending in aggregate, not against limits. For budget progress, open the **Budget** page.
+- **Individual accounts** — the dashboard shows totals; for per-account balances and recent activity, open **Accounts**.
+- **Goals** — savings progress lives on the **Goals** page.
+
+The dashboard is intentionally a summary. If you find yourself wanting a number that isn't there, it almost always exists on its dedicated page.

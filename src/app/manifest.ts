@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Fincenzo",
     short_name: "Fincenzo",
     description: "Budgeting and net-worth tracking for individuals and couples.",
-    start_url: "/",
+    start_url: "/dashboard",
     display: "standalone",
     background_color: "#0a0a0a",
     theme_color: "#0a0a0a",

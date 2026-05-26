@@ -1,0 +1,57 @@
+---
+title: Categorization & rules
+description: How transactions get categorized, how to override them, and how rules let your overrides stick.
+section: Personal finance
+order: 3
+---
+
+# Categorization & rules
+
+Every transaction has a **category** (Groceries, Dining, Transit, Income, …). The category is what your budget and category breakdown chart slice on, so getting it right matters.
+
+Fincenzo categorizes in three layers, in order:
+
+1. **Plaid's category** — Plaid assigns one to every transaction it returns. It's right most of the time and wrong sometimes.
+2. **Your one-off override** — change the category on a single transaction.
+3. **Your rules** — a saved instruction that re-categorizes matching transactions automatically (past and future).
+
+Higher-numbered layers win. A rule beats Plaid's default. A one-off override on a single transaction beats both.
+
+## Overriding a single transaction
+
+Open the **Transactions** page, click the row, and pick a new category from the dropdown. Save. That transaction now has your category, forever, regardless of what Plaid says about it later.
+
+This is fine for one-offs. If you find yourself doing it repeatedly for the same merchant, **create a rule**.
+
+## Rules
+
+A rule says: "anything matching X should be categorized as Y." Open **Transactions → Rules** to manage them.
+
+Two match types are supported:
+
+- **Merchant equals** — exact match on Plaid's merchant name. Most reliable for repeat merchants ("Trader Joe's", "Spotify").
+- **Name contains** — case-insensitive substring match on the transaction's name field. Looser, useful when a merchant shows up with slightly different names ("AMZN MKTP US", "Amazon.com", "Amazon Marketplace").
+
+A rule applies:
+
+- **Retroactively** — when you save the rule, every existing matching transaction gets re-categorized.
+- **Going forward** — every new transaction that matches gets categorized to the rule's category at sync time.
+
+## When rules conflict
+
+If a transaction matches more than one rule, the **most recently created rule wins**. There's no priority system today — order rules by deletion-and-recreation if you need finer control.
+
+## Bulk recategorization
+
+The easiest way to clean up a stretch of mis-categorized transactions:
+
+1. Override one transaction manually.
+2. From the override modal, check **"Create rule for similar transactions"**.
+3. Pick the match type (merchant equals is usually right).
+4. Save.
+
+Every matching transaction recategorizes immediately, and future ones will too.
+
+## What categories exist?
+
+Fincenzo uses Plaid's category taxonomy as the canonical list — it's deep, well-maintained, and unlikely to change. There's no UI today for creating fully custom categories; you reassign to existing ones. If you find yourself wishing for a category that doesn't exist, [open an issue](https://github.com/xvrgill/fincenzo/issues) — custom categories are a likely Phase 4 addition.

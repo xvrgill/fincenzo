@@ -6,7 +6,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Skip Next internals, image assets, and the SEO/metadata routes
+  // (robots.txt, sitemap.xml, opengraph-image, manifest) — those need to be
+  // reachable without any session redirect to be useful to crawlers.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|opengraph-image|manifest.webmanifest|icon|apple-icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

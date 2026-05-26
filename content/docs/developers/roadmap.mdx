@@ -1,0 +1,55 @@
+---
+title: Roadmap
+description: What's shipped, what's in progress, and what's after launch.
+section: Developers
+order: 3
+---
+
+# Roadmap
+
+Built in phases — solo experience first, household features layered on once the core is solid.
+
+## Phase 1 — Solo user ✅
+
+1. ✅ Project skeleton: Next.js + Tailwind + shadcn, Supabase project, Drizzle schema, auth.
+2. ✅ Plaid Link integration in sandbox; `access_token` stored per institution per user, encrypted at rest (AES-256-GCM via `src/lib/crypto.ts`).
+3. ✅ Transaction + account sync — initial pull on link, webhook-driven incremental sync (`/api/plaid/webhook`), plus manual `/api/plaid/sync`.
+4. ✅ Categorization: Plaid's category, user override, persisted rules (merchant-equals + name-contains substring).
+5. ✅ Dashboard: net worth, income/expense tiles, recent transactions, category breakdown.
+6. ✅ Budgets: monthly category budgets with progress bars; month navigator.
+7. ✅ Net worth: assets - liabilities, charted over time. Daily snapshot job runs via Vercel Cron (`vercel.json` → `/api/cron/snapshot`).
+8. ✅ Goals (savings targets with progress) — create/edit/delete.
+
+## Phase 2 — Households ✅
+
+1. ✅ Household entity; invite-by-email flow with pending-invite state.
+2. ✅ Per-account sharing toggle: private by default; owner promotes to `household`.
+3. ✅ Per-category sharing for budgets — household-scope add form has a Shared/Personal selector.
+4. ✅ Household dashboard view: scope switcher toggles between personal and household, recomputing every panel.
+5. ✅ Permissions: partner sees only shared data; only the owner can unlink or re-share.
+6. ✅ Activity log on the Household page.
+
+## Phase 3 — Polish (in progress)
+
+- Vitest + Playwright test scaffolding ✅
+- Recurring transaction detection / subscription tracker ✅
+- Cash-flow forecasting ✅
+- CSV transaction export ✅ (year-end summary PDF still a stretch goal)
+- PWA / mobile-friendly layout pass ✅
+- JWT-verified Plaid webhooks ✅
+- Plaid production approval — external process; see [Going to production with Plaid](/docs/developers/plaid-production) for the checklist
+- Error monitoring ✅ (Sentry server + client + edge, error-only Session Replay with masking)
+
+## Phase 3.5 — Marketing site & docs ✅ (mostly)
+
+- ✅ Public landing page at `/` with hero (3D-tilted dashboard preview, animated SVG chart and budget bars), problem comparison, Alice/Bob shared-vs-private demo, feature grid, built-in-the-open, privacy pillars, FAQ, and a repeat footer CTA. Dashboard moved to `/dashboard`; `(marketing)` and `(app)` route groups separated.
+- ✅ Waitlist plumbing: `waitlist_signups` table (`drizzle/0003_watery_talon.sql`), `POST /api/waitlist` with email validation + IP rate limit + honeypot, client form with idle/submitting/success/error states.
+- ✅ Invite-gated `/sign-up`: tokens are random 32-byte URL-safe strings stored only as sha-256 hashes, 7-day TTL, single-use via atomic UPDATE … WHERE signed_up_at IS NULL. Four-state error UI (missing / expired / consumed / valid). `/sign-in`'s "Create one" link replaced with "Join the waitlist".
+- ✅ Admin `/admin/waitlist` page behind `ADMIN_EMAILS` allowlist (404s otherwise). Per-row Issue / Re-issue / Revoke actions; invite URL returned once for copy/paste (email delivery is the remaining piece).
+- ✅ Portainer-style docs site at `/docs`: `@next/mdx` with `remark-gfm` / `remark-frontmatter` / `rehype-slug` / `rehype-autolink-headings` / `rehype-pretty-code`, catch-all `[[...slug]]` route, frontmatter-driven sidebar, scroll-spy right-rail TOC, breadcrumbs, prev/next nav. 13 content pages: getting started, connecting accounts, dashboard, budgets, goals, categorization & rules, households, privacy & data, troubleshooting, plus developer docs (architecture, local dev, plaid production, this roadmap).
+- ✅ SEO + social polish: enriched root metadata (OG + Twitter cards, metadataBase), site-wide `/opengraph-image`, per-doc dynamic OG via `/api/og` (Turbopack rejects file-convention OG inside catch-alls), `/sitemap.xml` (auto-includes every doc), `/robots.txt` (disallow auth surfaces + `/admin` + `/api`), Vercel Analytics on the marketing layout only.
+- 🔲 Remaining: Resend wiring for invite emails (manual copy/paste works today), pagefind search across the docs.
+
+## Phase 4 — Post-launch
+
+- **Plaid OAuth support** — required for Chase, Capital One, Wells Fargo, Bank of America, US Bank, Citi, USAA, Fidelity, and other OAuth-only institutions. Needs a `/plaid-oauth` route that re-opens Link with `receivedRedirectUri`, a `redirect_uri` added to `linkTokenCreate` in `/api/plaid/link-token`, and the same URL registered in Plaid Dashboard → Team Settings → API → Allowed redirect URIs. Until shipped, only non-OAuth banks/credit unions can link in production.

@@ -34,8 +34,8 @@ export default async function SignInPage({
           <Button type="submit" className="w-full">Sign in</Button>
           <p className="text-center text-sm text-muted-foreground">
             No account?{" "}
-            <Link href="/sign-up" className="underline underline-offset-4">
-              Create one
+            <Link href="/#waitlist" className="underline underline-offset-4">
+              Join the waitlist
             </Link>
           </p>
         </form>

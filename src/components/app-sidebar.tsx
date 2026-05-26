@@ -22,7 +22,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/accounts", label: "Accounts", icon: Wallet },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/cash-flow", label: "Cash Flow", icon: LineChart },
@@ -44,7 +44,7 @@ function NavList({
   return (
     <nav className="flex flex-1 flex-col gap-0.5">
       {nav.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={href}
