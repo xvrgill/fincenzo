@@ -12,10 +12,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteDescription =
+  "Budgeting and net-worth tracking for individuals — and the couples they live with. Track your own accounts and choose what to share. Nothing is shared by default, everything is reversible.";
+
 export const metadata: Metadata = {
-  title: "Fincenzo",
-  description: "A budgeting and net-worth tracker for individuals and couples.",
+  metadataBase: new URL(siteUrl),
+  title: { default: "Fincenzo", template: "%s · Fincenzo" },
+  description: siteDescription,
+  applicationName: "Fincenzo",
+  authors: [{ name: "Xavier Gill", url: "https://github.com/xvrgill" }],
+  keywords: [
+    "budgeting",
+    "net worth",
+    "personal finance",
+    "couples finance",
+    "household budget",
+    "Plaid",
+    "money tracker",
+  ],
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Fincenzo" },
+  openGraph: {
+    type: "website",
+    siteName: "Fincenzo",
+    title: "Fincenzo — mine, ours, one app",
+    description: siteDescription,
+    url: siteUrl,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fincenzo — mine, ours, one app",
+    description: siteDescription,
+  },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {

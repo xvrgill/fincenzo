@@ -208,6 +208,26 @@ export const recurringTransactions = pgTable(
   ],
 );
 
+// Public marketing waitlist. Anyone can insert via the unauthenticated
+// /api/waitlist endpoint; `invite_token` is filled in later by the admin
+// flow and consumed on signup. Sign-up gating in middleware/sign-up page
+// keys off the presence and validity of `invite_token`.
+export const waitlistSignups = pgTable(
+  "waitlist_signups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    source: text("source"),
+    referrer: text("referrer"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    invitedTokenHash: text("invited_token_hash"),
+    invitedTokenExpiresAt: timestamp("invited_token_expires_at", { withTimezone: true }),
+    signedUpAt: timestamp("signed_up_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("waitlist_signups_email_unique").on(t.email)],
+);
+
 export const goals = pgTable("goals", {
   id: uuid("id").primaryKey().defaultRandom(),
   scopeType: text("scope_type", { enum: ["user", "household"] }).notNull(),

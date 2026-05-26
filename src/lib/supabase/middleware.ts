@@ -1,7 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/auth"];
+// Routes anyone can visit, logged in or not. The landing page, marketing
+// pages, the public docs site, and the waitlist API all live here.
+const MARKETING_PATHS = ["/", "/docs", "/pricing", "/privacy", "/terms", "/changelog", "/api/waitlist", "/api/og"];
+
+// Routes that exist only for logged-out users. Logged-in visitors are
+// bounced to the app.
+const AUTH_PATHS = ["/sign-in", "/sign-up", "/auth"];
+
+function isMarketingPath(pathname: string) {
+  if (pathname === "/") return true;
+  return MARKETING_PATHS.some((p) => p !== "/" && (pathname === p || pathname.startsWith(`${p}/`)));
+}
+
+function isAuthPath(pathname: string) {
+  return AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -31,17 +46,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+  const { pathname } = request.nextUrl;
 
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/sign-in";
-    return NextResponse.redirect(url);
+  if (isMarketingPath(pathname)) {
+    return response;
   }
 
-  if (user && (request.nextUrl.pathname === "/sign-in" || request.nextUrl.pathname === "/sign-up")) {
+  if (isAuthPath(pathname)) {
+    if (user && (pathname === "/sign-in" || pathname === "/sign-up")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
+
+  if (!user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/sign-in";
     return NextResponse.redirect(url);
   }
 

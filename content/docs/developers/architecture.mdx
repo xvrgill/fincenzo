@@ -1,3 +1,10 @@
+---
+title: Architecture
+description: Tech stack, data model, household design, and repository layout.
+section: Developers
+order: 0
+---
+
 # Architecture
 
 ## Tech stack
@@ -58,6 +65,12 @@ Core tables:
 
 Row-level security policies enforce: a user sees their own rows; a household member sees rows where `visibility = 'household'` AND the owning user is in the same household.
 
+## Net worth snapshots
+
+A daily job rolls each user's current assets-minus-liabilities into a row in `net_worth_snapshots`, keyed by `(user_id, snapshot_date)`. The dashboard chart and the dedicated **Net worth** page read from this table, which is what lets the line keep moving even when the user doesn't log in.
+
+The job is wired in `vercel.json` and lives at `/api/cron/snapshot`. It runs once per day with a `CRON_SECRET` header check.
+
 ## Repository layout
 
 ```
@@ -65,18 +78,23 @@ src/
   app/
     (auth)/         sign-in, sign-up, server actions
     (app)/          authenticated shell: dashboard, accounts, transactions, budget, ...
+    (marketing)/    public site: landing + docs
     auth/callback/  Supabase email-confirmation handler
   components/
     ui/             shadcn primitives
     app-sidebar.tsx app-specific composites
+    marketing/      landing-page sections
+    docs/           docs site components
   lib/
     db/             drizzle schema, client, queries
     supabase/       server + browser + middleware clients
+    waitlist/       invite-token issuance + verification
+    docs.ts         content/docs walker for the docs site
     utils.ts        cn() and other shared helpers
-  proxy.ts          Next.js proxy (was "middleware" pre-v16) — refreshes the Supabase session and gates routes
+content/docs/       MDX content for the docs site
 drizzle/            generated migration SQL (created by db:generate)
 supabase/setup.sql  one-time auth → app schema wiring (run in Supabase SQL editor)
-docs/               developer documentation (this file lives here)
+docs/               developer documentation (canonical source for /docs/developers/* on the site)
 e2e/                Playwright specs
 ```
 

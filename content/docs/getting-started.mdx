@@ -1,0 +1,52 @@
+---
+title: Getting started
+description: Sign up, link your first bank, and get to your first dashboard in under five minutes.
+section: Getting started
+order: 0
+---
+
+# Getting started
+
+This is the five-minute path from "I just got my invite" to "I'm looking at my own dashboard."
+
+## 1. Accept your invite
+
+Open the invite email and click the **Create account** link. It opens `/sign-up` with a token baked in — that token is single-use, so finish setup in the same tab you opened it in.
+
+<Callout type="note">
+  The email in the form is locked to the address you joined the waitlist with. If you want a different email, reply to the invite — we'll reissue.
+</Callout>
+
+Set a password (8+ characters) and submit. Supabase will send a confirmation link to that email; click it to verify, and you'll land on the sign-in page.
+
+## 2. Sign in
+
+Use the email and password you just set. You'll land on the empty **Dashboard** at `/dashboard`. It's blank because you haven't linked any accounts yet.
+
+## 3. Link your first bank
+
+From the dashboard, hit **Accounts** in the sidebar and then **Link an institution**. Plaid handles the actual bank handshake — pick your bank, log in with your bank credentials, and Plaid hands Fincenzo back a list of accounts.
+
+Pick which of those accounts you want to track. You can always toggle individual accounts on or off later.
+
+<Callout type="tip">
+  Your bank credentials never touch Fincenzo's servers. Plaid sees them; we don't. What we receive is an access token, encrypted at rest before it's written to the database.
+</Callout>
+
+## 4. Wait for the sync
+
+The first sync pulls the last ~90 days of transactions plus your current balances. It happens in the background — usually under a minute. The dashboard will start filling in as soon as the first batch lands.
+
+## 5. (Optional) Set up budgets and goals
+
+Once transactions are in, you can:
+
+- Open **Budget** and create monthly category budgets.
+- Open **Goals** and set savings targets (e.g. "Emergency fund: $10,000").
+- Open **Net worth** to see the running chart — daily snapshots start immediately.
+
+## Next steps
+
+- [Connect another account](/docs/connecting-accounts) to link cards, savings, or brokerages.
+- [Set up a household](/docs/households) if you want to share with a partner.
+- [Privacy & data](/docs/privacy) — what's stored, what's encrypted, how to delete.

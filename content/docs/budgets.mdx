@@ -1,0 +1,59 @@
+---
+title: Budgets
+description: Set monthly category budgets, watch progress bars fill, see over-budget instantly.
+section: Personal finance
+order: 1
+---
+
+# Budgets
+
+A budget in Fincenzo is a **monthly cap on a category**. You decide how much to spend on Groceries; the app tracks it against your actual transactions and shows you where you stand.
+
+There are no rollover modes, no zero-based templates, no envelopes. Just: this is my cap, here's the bar, color it appropriately.
+
+## Creating a budget
+
+Open **Budget** in the sidebar and click **Add budget**:
+
+- **Category** — pick from the list of categories that exist in your transactions. New transactions can introduce new categories at any time, and you can budget against them as soon as they appear.
+- **Amount** — a dollar amount in cents (the UI handles the cents-to-dollars conversion).
+- **Scope** — Personal (default) or Shared (only visible if you're in a household). See [Households](/docs/households#shared-budgets) for what "shared" means here.
+
+Hit save and the bar appears immediately, showing how much of the month's cap you've already spent.
+
+## How the bar fills
+
+The progress bar fills proportionally to **(spent this month) ÷ (budget amount)**. The color changes based on how close you are:
+
+- **Green (primary)** — under budget. You're fine.
+- **Red (destructive)** — over budget. The bar fills past 100% and the text turns red.
+
+There's no warning yellow — over-budget is over-budget, and that's the only state that needs your attention. This is intentional and matches how Mint and YNAB handle it.
+
+## Month navigator
+
+The top of the budget page has a month switcher. Use it to:
+
+- See past months and how you did against your then-current budgets.
+- Pre-create budgets for next month (they just won't fill until that month begins).
+
+Each budget is scoped to **one month**. Editing a budget changes it only for the month you're looking at — past months are immutable, future months copy forward from the most recent set.
+
+## Editing and deleting
+
+Click any budget row to open it for editing. Save updates the current month's cap. Delete removes the budget from this month forward; past months still show what the cap was when that month was active.
+
+## What counts as "spent"
+
+For each budget category, "spent" means the **sum of expense transactions** in that category for that month, in the **selected scope**:
+
+- Personal scope: all transactions in your accounts (private + shared).
+- Household scope: only transactions in accounts you've actually shared with the household.
+
+Internal transfers (e.g. moving money from checking to savings) are excluded — those have a transfer category and don't roll into expense totals.
+
+## Tips
+
+- **Start loose.** Set caps you're almost sure you'll hit, then tighten over a few months.
+- **Don't budget every category.** Budget the 5–10 categories you actually care about. The dashboard's category breakdown shows you the long tail.
+- **If you're using rules**, override-then-recategorize a transaction once and a rule can re-categorize the rest automatically. See [Categorization & rules](/docs/categorization).

@@ -1,0 +1,118 @@
+---
+title: Troubleshooting & FAQ
+description: Common issues, common questions, and what to do when something doesn't add up.
+section: Reference
+order: 0
+---
+
+# Troubleshooting & FAQ
+
+If something's broken or confusing, this page is the first stop. If your question isn't here, [open an issue](https://github.com/xvrgill/fincenzo/issues) — the docs grow when people ask.
+
+## Account & sync issues
+
+### My transactions are out of date
+
+The most common cause is a webhook miss. Open the **Accounts** page, find the institution, and click **Sync now**. If the sync moves, you're fine — Plaid will catch up over the next few cycles.
+
+If the sync **doesn't** move, look for an **action required** badge on the account. That means your bank expired the token and you need to re-authenticate (see [Connecting accounts → Re-authentication](/docs/connecting-accounts#re-authentication)).
+
+### "Action required" on an account
+
+Plaid wants you to re-authenticate. Click the badge to open Plaid Link in update mode, re-enter your credentials, and syncing resumes. You don't lose any history.
+
+### Balance is wrong
+
+Balances come straight from Plaid, which gets them from your bank. If Fincenzo's balance disagrees with your bank's website:
+
+1. Check the "as of" timestamp on the account — Plaid balances refresh on a schedule, not in real time.
+2. Click **Sync now** to force a fresh pull.
+3. If it's still wrong after that, the issue is upstream of Fincenzo (Plaid or your bank). Usually resolves within a sync or two.
+
+### My bank isn't supported
+
+Plaid supports thousands of US institutions but **not the OAuth-only major banks** in our current beta — see [Connecting accounts → Which banks work today](/docs/connecting-accounts#which-banks-work-today) for the list. OAuth support is on the roadmap.
+
+If your bank isn't on either list (supported nor OAuth-required), try linking it anyway — Plaid maintains a constantly-updated registry and might already work.
+
+### Duplicate transactions
+
+Plaid occasionally double-posts a pending transaction once it clears. Fincenzo deduplicates by Plaid's `transaction_id`, so duplicates usually resolve within a sync. If one persists for more than a day, [open an issue](https://github.com/xvrgill/fincenzo/issues) and include the transaction date + amount.
+
+## Categorization & budgets
+
+### Transaction has the wrong category
+
+Override it manually on the **Transactions** page. If the same merchant keeps getting the wrong category, **create a rule** — see [Categorization & rules](/docs/categorization#rules).
+
+### Budget bar is wrong
+
+Two things to check:
+
+1. **Scope** — make sure the scope switcher (top right) is on the right view. A household-scope budget only counts transactions in shared accounts.
+2. **Categorization** — open the Transactions page, filter by the budget's category, and confirm the right transactions are in it. A miscategorized transaction will show up in the wrong budget.
+
+### Budget shows over even though I didn't spend that much
+
+Check for **refunds posted as expenses** (Plaid sometimes mis-signs them initially) or transactions categorized into the wrong bucket. Filter Transactions by the category and scan for outliers.
+
+## Households
+
+### I invited my partner but they don't see the invite
+
+The invite is tied to the **exact email** your partner signed up with. If they signed up as `name+work@example.com` and you invited `name@example.com`, the invite won't reach them. Re-issue to the address they actually used.
+
+### My partner can see something I don't want them to
+
+Open **Accounts** and toggle that account's share switch **off**. The account vanishes from your partner's household view immediately. The same goes for shared budgets — flip the budget's scope back to Personal.
+
+### I want to leave a household
+
+Open **Household → Leave household**. Your shared accounts revert to private the moment you leave. See [Households → Leaving a household](/docs/households#leaving-a-household).
+
+## Account & privacy
+
+### How do I delete my account?
+
+**Settings → Account → Delete account**. This hard-deletes your data — there's no soft delete. See [Privacy & data → Deleting your account](/docs/privacy#deleting-your-account) for the full breakdown.
+
+### Can I export my data?
+
+Transactions export to CSV from the Transactions page (look for the export button). Account-level and snapshot exports are on the roadmap.
+
+### Is my data encrypted?
+
+Plaid access tokens are encrypted at rest with AES-256-GCM. Auth credentials are handled by Supabase (their standard encryption). Transactions and balances themselves are not encrypted at the column level — they live in a row-level-security-protected Postgres database, but if you need column-level encryption for compliance reasons, Fincenzo isn't the right tool yet.
+
+### Is Fincenzo open source?
+
+The code is publicly viewable on GitHub but isn't currently distributed under an OSS license. You can read, learn, and file issues — please don't redeploy it as a service.
+
+## Sign in & invites
+
+### I never got my invite email
+
+Check spam. If it's not there, the invite hasn't been issued yet — invites go out in small batches. Joining the waitlist puts you in the queue; an admin issues the invite when the next batch opens.
+
+### My invite link says "expired"
+
+Invites expire 7 days after issue. You're still on the waitlist — you'll get a fresh link in the next batch.
+
+### My invite link says "already used"
+
+An account has already been created with this invite. Sign in at [/sign-in](/sign-in) — if you don't remember your password, reset it from there.
+
+### I forgot my password
+
+Click "Forgot password?" on the sign-in page. Supabase will email you a reset link.
+
+## Still stuck?
+
+[Open an issue](https://github.com/xvrgill/fincenzo/issues) on GitHub. Include:
+
+- What you were trying to do.
+- What you expected to happen.
+- What actually happened.
+- Screenshots if relevant.
+
+Bug reports turn into commits, which turn into a better app for everyone.

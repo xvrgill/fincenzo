@@ -1,0 +1,68 @@
+---
+title: Privacy & data
+description: What Fincenzo stores, what it encrypts, what Plaid sees, and how to delete your account.
+section: Privacy & data
+order: 0
+---
+
+# Privacy & data
+
+This page explains what we store, where, and how — with no hand-waving. If anything here is unclear, [open an issue](https://github.com/xvrgill/fincenzo/issues).
+
+## What Plaid sees vs. what Fincenzo sees
+
+When you link a bank, you log in **on a Plaid-hosted screen**. Your bank credentials never reach Fincenzo's servers.
+
+After authentication, Plaid hands Fincenzo:
+
+- A long-lived **access token** for the institution (encrypted at rest with AES-256-GCM before we store it).
+- A list of **accounts** with masked numbers, names, and types.
+- **Transactions** and **balances**, refreshed on a Plaid webhook.
+
+We never see your bank password and we never receive your full account or card numbers.
+
+## What's stored in our database
+
+| Data | Stored | Encrypted at rest |
+| --- | --- | --- |
+| Email + auth | Supabase Auth | Yes (Supabase-managed) |
+| Plaid access tokens | `plaid_items.access_token` | Yes (AES-256-GCM) |
+| Account metadata | `accounts` | No (not sensitive) |
+| Transactions | `transactions` | No (not sensitive) |
+| Budgets / goals | `budgets`, `goals` | No |
+| Household membership | `household_members` | No |
+
+The encryption key is held in an environment variable (`ENCRYPTION_KEY`), separate from the database.
+
+## Sharing is opt-in, per-account
+
+By default, **nothing** is shared. When you create or join a household:
+
+- Every account starts as **private**.
+- You flip a per-account toggle to share it with the household.
+- Your partner only ever sees accounts you've explicitly shared.
+- Un-sharing is instant and reversible.
+
+There is no "auto-share" mode. There is no setting that shares everything. The only way data crosses between users is one account at a time, with your hand on the switch.
+
+## Deleting your account
+
+Open **Settings → Account → Delete account**. This:
+
+1. Unlinks every Plaid item (no more webhooks).
+2. Hard-deletes your transactions, accounts, budgets, goals, and snapshots.
+3. Removes you from any household.
+4. Deletes your Supabase auth user.
+
+There is no soft-delete — your data is gone, not flagged for deletion. Backups roll off on the standard Supabase retention schedule.
+
+<Callout type="warn">
+  If you're the **owner** of a household, deleting your account will leave your partner without a household. Transfer ownership first, or your partner will be moved to the "no household" state.
+</Callout>
+
+## What we don't do
+
+- We don't sell or share your data.
+- We don't have an ad business, an analytics business, or a "partners" page.
+- We don't use your transactions to train ML models.
+- We don't run third-party trackers on the marketing page or the docs.

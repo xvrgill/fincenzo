@@ -129,3 +129,35 @@
     @apply font-mono;
   }
 }
+
+@keyframes heroTilt {
+  0%, 100% { transform: rotateX(14deg) rotateY(-18deg) rotateZ(2deg); }
+  50%      { transform: rotateX(10deg) rotateY(-14deg) rotateZ(1deg); }
+}
+@keyframes heroDraw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes heroFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes heroFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes heroGlow {
+  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.65; transform: translate(-50%, -50%) scale(1.08); }
+}
+@keyframes heroPulse {
+  0%, 100% { r: 3; opacity: 1; }
+  50%      { r: 4.5; opacity: 0.7; }
+}
+@keyframes flowPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.6); }
+}
+@keyframes flowBob {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50%      { transform: translateY(4px); opacity: 1; }
+}
