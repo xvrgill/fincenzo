@@ -21,7 +21,10 @@ export async function POST() {
   const { data } = await plaid.linkTokenCreate({
     user: { client_user_id: user.id },
     client_name: "Fincenzo",
-    products: [Products.Transactions],
+    // Investments requires Plaid approval in production; sandbox/development
+    // works out of the box. Listing it here means brokerages return holdings
+    // on link; banks-only institutions simply skip the product.
+    products: [Products.Transactions, Products.Investments],
     country_codes: [CountryCode.Us],
     language: "en",
     webhook,

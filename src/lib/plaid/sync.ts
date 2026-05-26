@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { accounts, plaidItems, transactions } from "@/lib/db/schema";
+import { accounts, holdings, plaidItems, securities, transactions } from "@/lib/db/schema";
 import { loadUserRules, matchRule } from "@/lib/rules";
 import * as Sentry from "@sentry/nextjs";
 import { decryptToken } from "@/lib/crypto";
@@ -164,9 +164,132 @@ export async function syncTransactions(itemId: string) {
   return { added: totalAdded, modified: totalModified, removed: totalRemoved };
 }
 
+// Pull investment holdings for an item and replace the per-account snapshot.
+// Plaid models holdings as a snapshot, not events: each call returns the full
+// current set of positions, so we delete + insert per account inside a tx.
+// Returns null if the item doesn't expose investments (no investment accounts
+// or product not yet ready), so callers can treat it as a no-op.
+export async function syncHoldings(itemId: string): Promise<{
+  holdings: number;
+  securities: number;
+} | null> {
+  const item = await db.query.plaidItems.findFirst({ where: eq(plaidItems.id, itemId) });
+  if (!item) throw new Error(`plaid_item ${itemId} not found`);
+
+  let data;
+  try {
+    const res = await callPlaid("investments/holdings/get", () =>
+      plaid.investmentsHoldingsGet({ access_token: decryptToken(item.accessToken) }),
+    );
+    data = res.data;
+  } catch (err) {
+    // Items without investments (most banks) return these — treat as no-op.
+    if (err instanceof PlaidApiError) {
+      const code = err.body.error_code;
+      if (
+        code === "PRODUCT_NOT_READY" ||
+        code === "PRODUCTS_NOT_SUPPORTED" ||
+        code === "NO_INVESTMENT_ACCOUNTS" ||
+        code === "NO_ACCOUNTS"
+      ) {
+        return null;
+      }
+    }
+    throw err;
+  }
+
+  // Map Plaid account_id -> our internal id, filtered to investment accounts
+  // for this item only.
+  const itemAccounts = await db
+    .select({ id: accounts.id, plaidAccountId: accounts.plaidAccountId, type: accounts.type })
+    .from(accounts)
+    .where(eq(accounts.plaidItemId, item.id));
+  const acctByPlaidId = new Map(itemAccounts.map((a) => [a.plaidAccountId!, a.id]));
+  const investmentAccountIds = new Set(
+    itemAccounts.filter((a) => a.type === "investment").map((a) => a.id),
+  );
+  if (investmentAccountIds.size === 0) return null;
+
+  // Upsert all securities returned. One row per security globally; multiple
+  // users holding the same ticker share a row.
+  const securityIdByPlaidId = new Map<string, string>();
+  for (const s of data.securities) {
+    const [row] = await db
+      .insert(securities)
+      .values({
+        plaidSecurityId: s.security_id,
+        tickerSymbol: s.ticker_symbol,
+        name: s.name,
+        type: s.type,
+        closePriceCents: s.close_price != null ? Math.round(s.close_price * 100) : null,
+        closePriceAsOf: s.close_price_as_of,
+        isoCurrencyCode: s.iso_currency_code ?? "USD",
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: securities.plaidSecurityId,
+        set: {
+          tickerSymbol: s.ticker_symbol,
+          name: s.name,
+          type: s.type,
+          closePriceCents: s.close_price != null ? Math.round(s.close_price * 100) : null,
+          closePriceAsOf: s.close_price_as_of,
+          isoCurrencyCode: s.iso_currency_code ?? "USD",
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ id: securities.id });
+    securityIdByPlaidId.set(s.security_id, row.id);
+  }
+
+  // Group incoming holdings by our account id (skip any whose account isn't
+  // an investment account we know about — Plaid sometimes includes the cash
+  // sweep depository alongside).
+  const byAccount = new Map<string, typeof data.holdings>();
+  for (const h of data.holdings) {
+    const accountId = acctByPlaidId.get(h.account_id);
+    if (!accountId || !investmentAccountIds.has(accountId)) continue;
+    const list = byAccount.get(accountId) ?? [];
+    list.push(h);
+    byAccount.set(accountId, list);
+  }
+
+  let inserted = 0;
+  await db.transaction(async (tx) => {
+    // Wipe existing rows for every investment account on this item, even ones
+    // with no incoming holdings (an account may have been fully liquidated).
+    await tx.delete(holdings).where(inArray(holdings.accountId, Array.from(investmentAccountIds)));
+
+    for (const [accountId, rows] of byAccount) {
+      if (rows.length === 0) continue;
+      await tx.insert(holdings).values(
+        rows.map((h) => ({
+          accountId,
+          securityId: securityIdByPlaidId.get(h.security_id)!,
+          quantity: h.quantity,
+          institutionValueCents: Math.round(h.institution_value * 100),
+          costBasisCents: h.cost_basis != null ? Math.round(h.cost_basis * 100) : null,
+          isoCurrencyCode: h.iso_currency_code ?? "USD",
+          asOf: new Date(),
+        })),
+      );
+      inserted += rows.length;
+    }
+  });
+
+  return { holdings: inserted, securities: data.securities.length };
+}
+
 export async function syncItem(itemId: string) {
   await syncAccounts(itemId);
-  return await syncTransactions(itemId);
+  const txResult = await syncTransactions(itemId);
+  // Holdings sync is best-effort — never block transaction sync on it.
+  try {
+    await syncHoldings(itemId);
+  } catch (err) {
+    Sentry.captureException(err, { tags: { area: "plaid-sync-holdings" }, extra: { itemId } });
+  }
+  return txResult;
 }
 
 export type SyncItemResult =
