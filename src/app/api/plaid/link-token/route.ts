@@ -22,9 +22,11 @@ export async function POST() {
     user: { client_user_id: user.id },
     client_name: "Fincenzo",
     // Investments requires Plaid approval in production; sandbox/development
-    // works out of the box. Listing it here means brokerages return holdings
-    // on link; banks-only institutions simply skip the product.
-    products: [Products.Transactions, Products.Investments],
+    // works out of the box. Using optional_products means brokerages return
+    // holdings on link; banks-only institutions (credit cards, etc.) still
+    // link successfully and just skip the product.
+    products: [Products.Transactions],
+    optional_products: [Products.Investments],
     country_codes: [CountryCode.Us],
     language: "en",
     webhook,
