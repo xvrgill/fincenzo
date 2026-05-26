@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -226,6 +227,38 @@ export const waitlistSignups = pgTable(
     signedUpAt: timestamp("signed_up_at", { withTimezone: true }),
   },
   (t) => [uniqueIndex("waitlist_signups_email_unique").on(t.email)],
+);
+
+// Investment securities — identified by Plaid's stable security_id. One row
+// per security across all users; rows are upserted on holdings sync.
+export const securities = pgTable("securities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  plaidSecurityId: text("plaid_security_id").notNull().unique(),
+  tickerSymbol: text("ticker_symbol"),
+  name: text("name"),
+  // Plaid: equity, etf, mutual fund, fixed income, cash, derivative, loan, other
+  type: text("type"),
+  closePriceCents: bigint("close_price_cents", { mode: "number" }),
+  closePriceAsOf: date("close_price_as_of"),
+  isoCurrencyCode: text("iso_currency_code").default("USD"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Holdings are a snapshot, not events — we replace all rows for an account
+// on each sync. Quantity is numeric to preserve fractional shares.
+export const holdings = pgTable(
+  "holdings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+    securityId: uuid("security_id").notNull().references(() => securities.id, { onDelete: "restrict" }),
+    quantity: numeric("quantity", { precision: 28, scale: 10, mode: "number" }).notNull(),
+    institutionValueCents: bigint("institution_value_cents", { mode: "number" }).notNull(),
+    costBasisCents: bigint("cost_basis_cents", { mode: "number" }),
+    isoCurrencyCode: text("iso_currency_code").default("USD"),
+    asOf: timestamp("as_of", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("holdings_account_security_idx").on(t.accountId, t.securityId)],
 );
 
 export const goals = pgTable("goals", {

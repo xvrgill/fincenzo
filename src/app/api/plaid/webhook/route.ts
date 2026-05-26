@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { plaidItems } from "@/lib/db/schema";
-import { syncItem } from "@/lib/plaid/sync";
+import { syncHoldings, syncItem } from "@/lib/plaid/sync";
 import { snapshotNetWorth } from "@/lib/queries/net-worth";
 import { verifyWebhook } from "@/lib/plaid/webhook-verify";
 import { PlaidApiError } from "@/lib/plaid/errors";
@@ -46,6 +46,20 @@ export async function POST(request: Request) {
   if (!item) {
     // Not one of ours — return 200 so Plaid stops retrying.
     return NextResponse.json({ ok: true, ignored: "unknown item" });
+  }
+
+  if (webhook_type === "HOLDINGS" && webhook_code === "DEFAULT_UPDATE") {
+    try {
+      await syncHoldings(item.id);
+      await snapshotNetWorth(item.userId);
+    } catch (err) {
+      Sentry.captureException(err, {
+        tags: { area: "plaid-webhook-holdings", webhook_code },
+        extra: { itemId: item.id },
+      });
+      throw err;
+    }
+    return NextResponse.json({ ok: true, synced: item.id });
   }
 
   if (webhook_type === "ITEM") {

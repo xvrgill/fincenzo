@@ -1,0 +1,45 @@
+---
+title: Investments
+description: Track brokerage and retirement holdings — portfolio value, allocation, and unrealized gain/loss.
+section: Personal finance
+order: 4
+---
+
+# Investments
+
+The Investments page pulls positions from any brokerage, IRA, 401(k), or robo-advisor you've linked. It's a snapshot of what you own — quantity, market value, cost basis, and unrealized gain or loss — not a trading interface.
+
+## What you'll see
+
+- **Portfolio value** — the total market value of every position across linked investment accounts, valued at the most recent price your institution reported.
+- **Cost basis** — what you paid for those positions. Only shown when every position reports a basis; some institutions (especially old 401(k)s) don't.
+- **Unrealized gain/loss** — value minus cost basis. Green when positive, red when negative.
+- **Allocation** — a breakdown by security type (equity, ETF, mutual fund, fixed income, cash, etc.) so you can see the shape of the portfolio at a glance.
+- **Holdings** — grouped by account, sorted by value. Symbol, name, quantity (with fractional shares), value, and per-position gain/loss.
+
+## How it stays in sync
+
+Holdings refresh automatically:
+
+- On the initial link of a brokerage account.
+- When your institution reports new prices or trades — Plaid sends a webhook and we re-pull holdings.
+- On any manual sync from the Accounts page.
+
+Holdings are a *snapshot*, not a transaction feed. Each sync replaces the previous set for that account, so a fully liquidated position simply disappears.
+
+## What it can and can't do
+
+- ✅ Tracks current value, allocation, gain/loss.
+- ✅ Counts toward your total net worth as an asset.
+- ✅ Respects household sharing — only investment accounts marked as shared appear in household scope.
+- 🚫 No day-over-day change yet (we don't store historical prices). Coming later.
+- 🚫 No trade history, dividend tracking, or tax-lot detail. Use your brokerage for those.
+- 🚫 No buy/sell — Fincenzo is read-only.
+
+## If something looks wrong
+
+- **No holdings showing** — make sure the linked institution actually exposes investments. Many credit unions and neobanks don't. Check the Accounts page for the account type.
+- **Cost basis is blank** — your institution didn't report it. Nothing you can do from our side; the gain/loss column will show "—" for those positions.
+- **Stale prices** — most institutions report close prices once a day. Intraday prices aren't part of Plaid's investments product.
+
+See also: [Connecting accounts](/docs/connecting-accounts), [Privacy & data](/docs/privacy).
