@@ -158,7 +158,7 @@ export async function syncTransactions(itemId: string) {
 
   await db
     .update(plaidItems)
-    .set({ syncCursor: cursor, lastSyncedAt: new Date() })
+    .set({ syncCursor: cursor, lastSyncedAt: new Date(), status: "healthy" })
     .where(eq(plaidItems.id, item.id));
 
   return { added: totalAdded, modified: totalModified, removed: totalRemoved };
@@ -182,6 +182,12 @@ export async function syncAllItems(userId: string): Promise<SyncItemResult[]> {
       results.push({ itemId: it.id, ok: true, ...r });
     } catch (err) {
       if (err instanceof PlaidApiError) {
+        if (err.body.error_code === "ITEM_LOGIN_REQUIRED") {
+          await db
+            .update(plaidItems)
+            .set({ status: "login_required" })
+            .where(eq(plaidItems.id, it.id));
+        }
         Sentry.captureException(err, {
           tags: {
             area: "plaid-sync",
