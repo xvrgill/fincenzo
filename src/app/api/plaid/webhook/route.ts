@@ -9,13 +9,16 @@ import { verifyWebhook } from "@/lib/plaid/webhook-verify";
 import { PlaidApiError } from "@/lib/plaid/errors";
 
 // Plaid sends webhooks for many event types. We act on the transactions-sync
-// signals and ignore the rest (acknowledged with 200 so Plaid stops retrying).
+// signals and on ITEM lifecycle events that change reconnection state; the
+// rest are acknowledged with 200 so Plaid stops retrying.
 //
 // See: https://plaid.com/docs/api/products/transactions/#webhooks
+//      https://plaid.com/docs/api/items/#webhooks
 type PlaidWebhookBody = {
   webhook_type?: string;
   webhook_code?: string;
   item_id?: string;
+  error?: { error_code?: string; error_type?: string } | null;
 };
 
 export async function POST(request: Request) {
@@ -37,6 +40,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: "missing item_id" });
   }
 
+  const item = await db.query.plaidItems.findFirst({
+    where: eq(plaidItems.plaidItemId, item_id),
+  });
+  if (!item) {
+    // Not one of ours — return 200 so Plaid stops retrying.
+    return NextResponse.json({ ok: true, ignored: "unknown item" });
+  }
+
+  if (webhook_type === "ITEM") {
+    const nextStatus = mapItemWebhookToStatus(webhook_code, body.error?.error_code);
+    if (nextStatus && nextStatus !== item.status) {
+      await db.update(plaidItems).set({ status: nextStatus }).where(eq(plaidItems.id, item.id));
+    }
+    return NextResponse.json({ ok: true, item: item.id, status: nextStatus ?? item.status });
+  }
+
   // Triggers that mean "new or changed transaction data is available."
   const shouldSync =
     webhook_type === "TRANSACTIONS" &&
@@ -47,14 +66,6 @@ export async function POST(request: Request) {
 
   if (!shouldSync) {
     return NextResponse.json({ ok: true, ignored: `${webhook_type}/${webhook_code}` });
-  }
-
-  const item = await db.query.plaidItems.findFirst({
-    where: eq(plaidItems.plaidItemId, item_id),
-  });
-  if (!item) {
-    // Not one of ours — return 200 so Plaid stops retrying.
-    return NextResponse.json({ ok: true, ignored: "unknown item" });
   }
 
   try {
@@ -77,4 +88,26 @@ export async function POST(request: Request) {
     throw err;
   }
   return NextResponse.json({ ok: true, synced: item.id });
+}
+
+function mapItemWebhookToStatus(
+  code: string | undefined,
+  errorCode: string | undefined,
+): "healthy" | "login_required" | "error" | null {
+  switch (code) {
+    case "ERROR":
+      // Only ITEM_LOGIN_REQUIRED is recoverable via Link update mode; other
+      // errors (INSTITUTION_DOWN, etc.) are transient and shouldn't flip status.
+      return errorCode === "ITEM_LOGIN_REQUIRED" ? "login_required" : null;
+    case "PENDING_EXPIRATION":
+    case "PENDING_DISCONNECT":
+      return "login_required";
+    case "USER_PERMISSION_REVOKED":
+    case "USER_ACCOUNT_REVOKED":
+      return "error";
+    case "LOGIN_REPAIRED":
+      return "healthy";
+    default:
+      return null;
+  }
 }

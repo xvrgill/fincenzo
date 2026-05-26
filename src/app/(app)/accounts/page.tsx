@@ -8,6 +8,7 @@ import { LinkAccountButton } from "@/components/link-account-button";
 import { SyncButton } from "@/components/sync-button";
 import { VisibilityToggle } from "@/components/accounts/visibility-toggle";
 import { UnlinkItemButton } from "@/components/accounts/unlink-item-button";
+import { ReconnectButton } from "@/components/accounts/reconnect-button";
 import { formatMoneyCents } from "@/lib/format";
 import { getHouseholdState } from "@/lib/queries/household";
 
@@ -75,7 +76,20 @@ export default async function AccountsPage() {
               <Card key={item.id}>
                 <CardHeader className="flex flex-row items-start justify-between gap-3">
                   <div>
-                    <CardTitle>{item.institutionName ?? "Linked institution"}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      {item.institutionName ?? "Linked institution"}
+                      {item.status !== "healthy" ? (
+                        <span
+                          className={
+                            item.status === "login_required"
+                              ? "rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive"
+                              : "rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive"
+                          }
+                        >
+                          {item.status === "login_required" ? "Reconnect required" : "Error"}
+                        </span>
+                      ) : null}
+                    </CardTitle>
                     <CardDescription className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1.5">
                       <span>
                         {itemAccounts.length} account{itemAccounts.length === 1 ? "" : "s"}
@@ -88,11 +102,20 @@ export default async function AccountsPage() {
                       ) : null}
                     </CardDescription>
                   </div>
-                  <UnlinkItemButton
-                    id={item.id}
-                    institutionName={item.institutionName ?? "this institution"}
-                  />
+                  <div className="flex items-center gap-2">
+                    {item.status !== "healthy" ? <ReconnectButton itemId={item.id} /> : null}
+                    <UnlinkItemButton
+                      id={item.id}
+                      institutionName={item.institutionName ?? "this institution"}
+                    />
+                  </div>
                 </CardHeader>
+                {item.status === "login_required" ? (
+                  <CardContent className="border-t bg-destructive/5 py-3 text-sm text-destructive">
+                    Your bank needs you to sign in again. Balances and transactions will stop
+                    updating until you reconnect.
+                  </CardContent>
+                ) : null}
                 <CardContent className="divide-y">
                   {itemAccounts.map((a) => (
                     <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
