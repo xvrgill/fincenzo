@@ -74,6 +74,47 @@ Local setup, scripts, and testing.
 | `npm run db:push` | Push schema directly to the DB (skip migration files — fine in early dev) |
 | `npm run db:studio` | Drizzle Studio (browse/edit DB rows in the browser) |
 
+## One-off scripts
+
+Maintenance scripts that don't belong in the npm script table live under `scripts/` and are run with `tsx`. They read the same env vars the app does, so set them up before running.
+
+### `scripts/encrypt-plaid-tokens.ts`
+
+Backfill encryption for any plaintext `plaid_items.access_token` rows. Idempotent — rows already encrypted (`v1:...`) are skipped. Useful once after introducing `PLAID_TOKEN_ENCRYPTION_KEY`; not needed in normal operation.
+
+```sh
+npx tsx --env-file=.env.local scripts/encrypt-plaid-tokens.ts
+```
+
+### `scripts/backfill-transaction-details.ts`
+
+Populate the transaction detail fields (`payment_channel`, `merchant_logo_url`, `merchant_website`, `original_description`, `location_*`) for rows synced before migration `0005`. Plaid's `/transactions/sync` only emits `added`/`modified` events, so historical rows never re-flow through `syncTransactions` and stay null on the new columns. This script pulls them via `/transactions/get` and updates in place by `plaid_transaction_id`.
+
+```sh
+npx tsx --env-file=.env.local scripts/backfill-transaction-details.ts
+```
+
+Flags:
+
+- `--days=N` — how far back to fetch (default `730`, ~2 years).
+- `--item=<plaid_items.id>` — backfill a single item.
+- `--dry-run` — count what would change without writing.
+
+Idempotent. Rows where every detail field is null on Plaid's side are skipped to avoid no-op writes. Items with `INVALID_ACCESS_TOKEN` (e.g. expired or wrong-environment) are logged and skipped; the script keeps going.
+
+**Cross-environment caveat.** The Plaid client reads `PLAID_ENV` once at startup, so the script can only talk to items linked under the same environment. If your database holds items from multiple environments (a common case when local dev and production share a Supabase project), run the script twice — once with each environment's `PLAID_ENV` + `PLAID_SECRET`:
+
+```sh
+# Backfill sandbox items
+npx tsx --env-file=.env.local scripts/backfill-transaction-details.ts
+
+# Backfill production items (override the sandbox vars from .env.local)
+PLAID_ENV=production PLAID_SECRET='<prod secret>' \
+  npx tsx --env-file=.env.local scripts/backfill-transaction-details.ts
+```
+
+Items from the other environment surface as `INVALID_ACCESS_TOKEN ... expected "X", got "Y"` and are skipped on each pass, which is fine — they get picked up on the matching run.
+
 ## Testing
 
 **Unit tests (Vitest).** Specs live next to source as `*.test.ts` under `src/`. The suite covers pure modules — crypto, formatting, category rules, scope helpers. `vitest.setup.ts` stubs `DATABASE_URL` and `PLAID_TOKEN_ENCRYPTION_KEY` so modules that read env at import time don't throw; nothing in the unit suite opens a real DB connection.
