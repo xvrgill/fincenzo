@@ -52,6 +52,7 @@ Built in phases — solo experience first, household features layered on once th
 - 🔲 **Investments day-change** — needs a daily security price snapshot table; deferred from the initial investments ship.
 - ✅ **Split Plaid Link entrypoint (banking vs. investments)** — `/api/plaid/link-token` accepts `{ mode }`; investments mode swaps `products: [Investments]` with Transactions as `required_if_supported_products`. Accounts page exposes both via a dropdown.
 - 🔲 **Year-end summary PDF** — stretch goal alongside the existing CSV export.
+- 🔲 **Apple Pay merchant-name cleanup** — Apple Pay transactions arrive with descriptions like `AplPay MELLOW YELLOWNEW YORK NY` (no space between merchant and city), and Plaid's normalizer tokenizes on whitespace, so the merchant lands as `Mellow Yellownew` and the city as `York, NY`. Pure Plaid parsing artifact, only affects Apple Pay rows where the city begins with a letter that closes a syllable on the merchant (`NEW YORK` → "...new york"). Fix: write-time heuristic that strips a trailing `new` from `merchantName` when the original description matches `/aplpay .* new york ny/i`, generalized to other affected cities as they surface. Low priority — cosmetic, doesn't affect categorization or amounts.
 
 ## Phase 3.5 — Marketing site & docs ✅ (mostly)
 
