@@ -1,16 +1,18 @@
-import { desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
-import { accounts, plaidItems } from "@/lib/db/schema";
+import { accounts, plaidItems, users } from "@/lib/db/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkAccountButton } from "@/components/link-account-button";
 import { SyncButton } from "@/components/sync-button";
 import { VisibilityToggle } from "@/components/accounts/visibility-toggle";
 import { UnlinkItemButton } from "@/components/accounts/unlink-item-button";
 import { ReconnectButton } from "@/components/accounts/reconnect-button";
+import { OwnerAvatar } from "@/components/owner-avatar";
 import { formatMoneyCents } from "@/lib/format";
 import { getHouseholdState } from "@/lib/queries/household";
+import { getActiveScope } from "@/lib/scope";
 
 export default async function AccountsPage() {
   const supabase = await createClient();
@@ -19,7 +21,16 @@ export default async function AccountsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const [items, allAccounts, household] = await Promise.all([
+  const [scope, household] = await Promise.all([
+    getActiveScope(user.id),
+    getHouseholdState(user.id),
+  ]);
+  const inHousehold = household.inHousehold;
+  const isHouseholdScope = scope.kind === "household";
+
+  // Always show the user's own items. In household scope, also show shared
+  // accounts owned by other members (read-only).
+  const [items, myAccounts] = await Promise.all([
     db
       .select()
       .from(plaidItems)
@@ -30,16 +41,75 @@ export default async function AccountsPage() {
       .from(accounts)
       .where(eq(accounts.userId, user.id))
       .orderBy(accounts.createdAt),
-    getHouseholdState(user.id),
   ]);
-  const inHousehold = household.inHousehold;
 
-  const accountsByItem = new Map<string, typeof allAccounts>();
-  for (const a of allAccounts) {
+  const otherMemberIds =
+    isHouseholdScope && scope.kind === "household"
+      ? scope.memberUserIds.filter((id) => id !== user.id)
+      : [];
+
+  type SharedAccount = typeof accounts.$inferSelect & {
+    institutionName: string | null;
+    ownerDisplayName: string | null;
+    ownerEmail: string;
+  };
+  let sharedAccounts: SharedAccount[] = [];
+  if (otherMemberIds.length > 0) {
+    sharedAccounts = (await db
+      .select({
+        id: accounts.id,
+        userId: accounts.userId,
+        plaidItemId: accounts.plaidItemId,
+        plaidAccountId: accounts.plaidAccountId,
+        name: accounts.name,
+        officialName: accounts.officialName,
+        mask: accounts.mask,
+        type: accounts.type,
+        subtype: accounts.subtype,
+        currentBalanceCents: accounts.currentBalanceCents,
+        availableBalanceCents: accounts.availableBalanceCents,
+        isoCurrencyCode: accounts.isoCurrencyCode,
+        visibility: accounts.visibility,
+        archivedAt: accounts.archivedAt,
+        createdAt: accounts.createdAt,
+        institutionName: plaidItems.institutionName,
+        ownerDisplayName: users.displayName,
+        ownerEmail: users.email,
+      })
+      .from(accounts)
+      .leftJoin(plaidItems, eq(plaidItems.id, accounts.plaidItemId))
+      .innerJoin(users, eq(users.id, accounts.userId))
+      .where(
+        and(
+          inArray(accounts.userId, otherMemberIds),
+          eq(accounts.visibility, "household"),
+          ne(accounts.userId, user.id),
+        ),
+      )
+      .orderBy(asc(users.displayName), accounts.createdAt)) as SharedAccount[];
+  }
+
+  const accountsByItem = new Map<string, typeof myAccounts>();
+  for (const a of myAccounts) {
     if (!a.plaidItemId) continue;
     const list = accountsByItem.get(a.plaidItemId) ?? [];
     list.push(a);
     accountsByItem.set(a.plaidItemId, list);
+  }
+
+  // Group shared accounts by owner so each partner gets one card.
+  const sharedByOwner = new Map<
+    string,
+    { displayName: string | null; email: string; rows: SharedAccount[] }
+  >();
+  for (const a of sharedAccounts) {
+    const bucket = sharedByOwner.get(a.userId) ?? {
+      displayName: a.ownerDisplayName,
+      email: a.ownerEmail,
+      rows: [],
+    };
+    bucket.rows.push(a);
+    sharedByOwner.set(a.userId, bucket);
   }
 
   return (
@@ -48,7 +118,9 @@ export default async function AccountsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
           <p className="text-sm text-muted-foreground">
-            Linked institutions and accounts.
+            {isHouseholdScope
+              ? "Your linked accounts plus anything shared by your household."
+              : "Linked institutions and accounts."}
           </p>
         </div>
         <div className="flex gap-2">
@@ -72,6 +144,11 @@ export default async function AccountsPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
+          {isHouseholdScope ? (
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Your accounts
+            </h2>
+          ) : null}
           {items.map((item) => {
             const itemAccounts = accountsByItem.get(item.id) ?? [];
             return (
@@ -150,6 +227,81 @@ export default async function AccountsPage() {
               </Card>
             );
           })}
+
+          {sharedByOwner.size > 0 ? (
+            <>
+              <h2 className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Shared with you
+              </h2>
+              {Array.from(sharedByOwner.entries()).map(([ownerId, group]) => {
+                const ownerLabel = group.displayName ?? group.email;
+                // Sub-group by institution within an owner so the card structure
+                // mirrors "Your accounts": one block per institution.
+                const byInstitution = new Map<string, SharedAccount[]>();
+                for (const a of group.rows) {
+                  const key = a.institutionName ?? "Other";
+                  const list = byInstitution.get(key) ?? [];
+                  list.push(a);
+                  byInstitution.set(key, list);
+                }
+                return (
+                  <Card key={ownerId} className="border-dashed">
+                    <CardHeader className="flex flex-row items-center gap-3">
+                      <OwnerAvatar
+                        userId={ownerId}
+                        name={group.displayName}
+                        email={group.email}
+                        size="md"
+                      />
+                      <div className="min-w-0">
+                        <CardTitle className="truncate">Shared by {ownerLabel}</CardTitle>
+                        <CardDescription>
+                          {group.rows.length} account{group.rows.length === 1 ? "" : "s"} · read-only
+                        </CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                      {Array.from(byInstitution.entries()).map(([institution, rows]) => (
+                        <div key={institution}>
+                          <p className="mb-1 text-xs font-medium text-muted-foreground">
+                            {institution}
+                          </p>
+                          <div className="divide-y rounded-md border bg-muted/30">
+                            {rows.map((a) => (
+                              <div
+                                key={a.id}
+                                className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                              >
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium">
+                                    {a.name}
+                                    {a.mask ? (
+                                      <span className="ml-2 text-xs text-muted-foreground">
+                                        ••{a.mask}
+                                      </span>
+                                    ) : null}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground capitalize">
+                                    {a.subtype ?? a.type}
+                                  </p>
+                                </div>
+                                <p className="text-sm font-medium tabular-nums">
+                                  {formatMoneyCents(
+                                    a.currentBalanceCents,
+                                    a.isoCurrencyCode ?? "USD",
+                                  )}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </>
+          ) : null}
         </div>
       )}
     </div>

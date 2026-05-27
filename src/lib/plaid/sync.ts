@@ -23,6 +23,43 @@ function toCents(amount: number | null | undefined): number | null {
   return Math.round(amount * 100);
 }
 
+// Pull the optional detail fields off a Plaid transaction. Returned as a
+// partial so callers can spread it into insert/update payloads.
+type PlaidTxn = {
+  payment_channel?: string | null;
+  logo_url?: string | null;
+  website?: string | null;
+  original_description?: string | null;
+  location?: {
+    address?: string | null;
+    city?: string | null;
+    region?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+    lat?: number | null;
+    lon?: number | null;
+    store_number?: string | null;
+  } | null;
+};
+
+function extractDetailFields(t: PlaidTxn): Partial<typeof transactions.$inferInsert> {
+  const loc = t.location ?? {};
+  return {
+    paymentChannel: t.payment_channel ?? null,
+    merchantLogoUrl: t.logo_url ?? null,
+    merchantWebsite: t.website ?? null,
+    originalDescription: t.original_description ?? null,
+    locationAddress: loc.address ?? null,
+    locationCity: loc.city ?? null,
+    locationRegion: loc.region ?? null,
+    locationPostalCode: loc.postal_code ?? null,
+    locationCountry: loc.country ?? null,
+    locationLat: loc.lat ?? null,
+    locationLon: loc.lon ?? null,
+    locationStoreNumber: loc.store_number ?? null,
+  };
+}
+
 // Pull account list from Plaid and upsert into our accounts table.
 export async function syncAccounts(itemId: string) {
   const item = await db.query.plaidItems.findFirst({ where: eq(plaidItems.id, itemId) });
@@ -108,6 +145,7 @@ export async function syncTransactions(itemId: string) {
       const accountId = acctByPlaidId.get(t.account_id);
       if (!accountId) continue;
       const userCategory = ruleCategoryFor(t.merchant_name, t.name);
+      const detail = extractDetailFields(t);
       await db
         .insert(transactions)
         .values({
@@ -121,6 +159,7 @@ export async function syncTransactions(itemId: string) {
           plaidCategory: t.personal_finance_category?.primary ?? t.category?.[0] ?? null,
           userCategory,
           pending: t.pending,
+          ...detail,
         })
         .onConflictDoNothing({ target: transactions.plaidTransactionId });
       totalAdded += 1;
@@ -131,6 +170,7 @@ export async function syncTransactions(itemId: string) {
       // overwrite userCategory when there's a rule match; don't blow away a
       // manual override set on this transaction alone.
       const userCategory = ruleCategoryFor(t.merchant_name, t.name);
+      const detail = extractDetailFields(t);
       await db
         .update(transactions)
         .set({
@@ -140,6 +180,7 @@ export async function syncTransactions(itemId: string) {
           merchantName: t.merchant_name,
           plaidCategory: t.personal_finance_category?.primary ?? t.category?.[0] ?? null,
           pending: t.pending,
+          ...detail,
           ...(userCategory ? { userCategory } : {}),
         })
         .where(eq(transactions.plaidTransactionId, t.transaction_id));

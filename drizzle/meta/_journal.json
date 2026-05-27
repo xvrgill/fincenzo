@@ -36,6 +36,13 @@
       "when": 1779766288534,
       "tag": "0004_fluffy_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779906000817,
+      "tag": "0005_motionless_chimera",
+      "breakpoints": true
     }
   ]
 }
